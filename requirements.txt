@@ -1,13 +1,10 @@
-flask
-num2words
-playwright
-pandas
-openpyxl
-reportlab
-python-docx
+Flask
 mysql-connector-python
 python-dotenv
-cryptography
-requests
-# After installing these packages, run:
-# python -m playwright install chromium
+openpyxl
+python-docx
+num2words
+playwright
+gunicorn
+pytest
+pytest-playwright
