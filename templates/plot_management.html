@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .settings-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 30px;
+        max-width: 600px;
+        margin: 20px auto;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: #495057;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+
+    .btn-save {
+        background: #f16924;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+        width: 100%;
+        transition: background 0.2s;
+    }
+
+    .btn-save:hover {
+        background: #d85e1f;
+    }
+
+    .stats-summary {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
+
+    .stat-value {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+</style>
+
+<div class="container">
+    <div class="settings-card">
+        <h1 class="page-title">Plot Management</h1>
+
+        <!-- Project Switcher -->
+        <div class="mb-4">
+            <form action="{{ url_for('plot_management') }}" method="GET" class="d-flex justify-content-center">
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-light">Project:</span>
+                    <select name="project" class="form-select" onchange="this.form.submit()">
+                        {% for p in projects %}
+                        <option value="{{ p }}" {% if p==selected_project %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <p class="text-center text-muted mb-4">Configure settings for <strong>{{ selected_project }}</strong></p>
+
+        <form method="POST" action="{{ url_for('update_plot_settings') }}">
+            <input type="hidden" name="project_name" value="{{ selected_project }}">
+
+            <div class="form-group">
+                <label for="totalPlots" class="form-label">Total Plots in Project</label>
+                <input type="number" class="form-control" id="totalPlots" name="total_plots"
+                    value="{{ project_data.total_plots }}" required min="1">
+                <div class="form-text">Total number of plots in the approved layout.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="landownerPlots" class="form-label">Plots Allocated to Landowner</label>
+                <input type="number" class="form-control" id="landownerPlots" name="plots_to_landowners"
+                    value="{{ project_data.plots_to_landowners }}" required min="0">
+                <div class="form-text">Number of plots reserved/given to the landowner.</div>
+            </div>
+
+            <button type="submit" class="btn btn-save">Save Settings</button>
+        </form>
+
+        <div class="stats-summary">
+            <h5 class="mb-3">Current Status</h5>
+            <div class="stat-row">
+                <span>Total Plots:</span>
+                <span class="stat-value">{{ project_data.total_plots }}</span>
+            </div>
+            <div class="stat-row">
+                <span>Landowner Share:</span>
+                <span class="stat-value">- {{ project_data.plots_to_landowners }}</span>
+            </div>
+            <div class="stat-row">
+                <span>Sold:</span>
+                <span class="stat-value">- {{ project_data.plots_sold }}</span>
+            </div>
+            <div class="stat-row mt-2 pt-2 border-top">
+                <span class="fw-bold text-success">Available for Sale:</span>
+                <span class="stat-value text-success">{{ project_data.plots_available }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .pending-page {
+        padding: 24px 0;
+    }
+
+    .pending-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    }
+
+    .pending-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .pending-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .pending-count {
+        background: #f16924;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .pending-table-wrapper {
+        overflow-x: auto;
+    }
+
+    table.pending-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .pending-table th,
+    .pending-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+    }
+
+    .pending-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .pending-table tr:hover {
+        background: #f9fafb;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .btn-review {
+        background: #f16924;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-review:hover {
+        background: #d85e1f;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #d1d5db;
+        margin-bottom: 16px;
+    }
+</style>
+
+<div class="pending-page">
+    <div class="container">
+        <div class="pending-card">
+            <div class="pending-header">
+                <div>
+                    <h1 class="pending-title">Pending Receipts</h1>
+                    <p style="color:#6b7280; margin:4px 0 0 0;">Review and approve receipts submitted by users</p>
+                </div>
+                <span class="pending-count">{{ pending_receipts|length }} Pending</span>
+            </div>
+
+            {% if pending_receipts %}
+            <div class="pending-table-wrapper">
+                <table class="pending-table">
+                    <thead>
+                        <tr>
+                            <th>Receipt No</th>
+                            <th>Project</th>
+                            <th>Plot No</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Submitted By</th>
+                            <th>Submitted At</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for receipt in pending_receipts %}
+                        <tr>
+                            <td><strong>{{ receipt.no }}</strong></td>
+                            <td>{{ receipt.project_name or '-' }}</td>
+                            <td>{{ receipt.plot_no }}</td>
+                            <td>{{ receipt.customer_name }}</td>
+                            <td>₹{{ "{:,.2f}".format(receipt.amount_numeric) }}</td>
+                            <td>{{ receipt.submitted_by }}</td>
+                            <td>{{ receipt.submitted_at[:10] if receipt.submitted_at else '-' }}</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>
+                                <a href="{{ url_for('approve_receipt', pending_id=receipt.id) }}" class="btn-review">
+                                    <i class="bi bi-eye"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-check-circle"></i>
+                <h3>All Caught Up!</h3>
+                <p>No pending receipts awaiting approval.</p>
+            </div>
+            {% endif %}
+
+            <!-- Back to Dashboard Button -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary"
+                    style="background: #f16924; color: white; border: none; padding: 0.75rem 2rem; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-block; transition: all 0.3s;"
+                    onmouseover="this.style.background='#d85e1f'" onmouseout="this.style.background='#f16924'">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

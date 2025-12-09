@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .btn-primary {
+        background: #0b5ed7;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 6px;
+        text-decoration: none;
+        border: none;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background: #0a58ca;
+        color: #fff;
+    }
+
+    .form-page {
+        padding: 28px 12px;
+        max-width: 800px;
+        margin: 18px auto;
+    }
+
+    .form-card {
+        background: #fff;
+        padding: 22px;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(20, 30, 50, 0.06);
+    }
+
+    .form-header {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+
+    .form-title {
+        margin: 0;
+        font-size: 20px;
+        color: #222;
+        font-weight: 700;
+    }
+
+    .form-sub {
+        margin-top: 4px;
+        color: #666;
+        font-size: 13px;
+    }
+
+    .file-drop-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #fafafa;
+        margin-bottom: 20px;
+        transition: all 0.2s;
+    }
+
+    .file-drop-area:hover {
+        border-color: #0b5ed7;
+        background: #f0f7ff;
+    }
+
+    .summary-box {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .stat-item {
+        text-align: center;
+        background: #fff;
+        padding: 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-val {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #777;
+        letter-spacing: 0.5px;
+    }
+
+    .text-success {
+        color: #198754;
+    }
+
+    .text-warning {
+        color: #ffc107;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    .error-list {
+        margin-top: 15px;
+        font-size: 13px;
+        color: #dc3545;
+        max-height: 200px;
+        overflow-y: auto;
+        background: #fff;
+        border: 1px solid #f5c2c7;
+        padding: 10px;
+        border-radius: 6px;
+    }
+</style>
+
+<div class="form-page">
+    <div class="form-card">
+
+        <div class="form-header">
+            <h2 class="form-title">Bulk Import Receipts</h2>
+            <div class="form-sub">Upload an Excel file (.xlsx) to create receipts in bulk.</div>
+        </div>
+
+        <div class="alert alert-info" style="font-size:13px;">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            This tool is designed for <strong>Vishvam Plots.xlsx</strong> structure. It handles merged/grouped cells
+            automatically.
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            <div class="file-drop-area">
+                <i class="bi bi-file-earmark-spreadsheet" style="font-size: 48px; color: #198754;"></i>
+                <div style="margin: 15px 0; font-weight: 600; color: #555;">Drag & Drop or Click to Upload</div>
+                <input type="file" name="file" accept=".xlsx, .xls" class="form-control"
+                    style="max-width: 300px; margin: 0 auto;">
+            </div>
+
+            <div class="form-actions" style="text-align: right;">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-cloud-upload me-2"></i> Upload & Import
+                </button>
+            </div>
+        </form>
+
+        {% if summary %}
+        <div class="summary-box">
+            <h5 style="margin-bottom: 15px; font-weight: 600;">Import Summary</h5>
+
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-val text-success">{{ summary.imported }}</div>
+                    <div class="stat-label">Imported</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val text-warning" style="color:#d39e00;">{{ summary.skipped }}</div>
+                    <div class="stat-label">Skipped (Duplicate)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-val text-danger">{{ summary.errors|length }}</div>
+                    <div class="stat-label">Errors</div>
+                </div>
+            </div>
+
+            {% if summary.errors %}
+            <div class="error-list">
+                <strong>Errors found:</strong>
+                <ul style="margin-bottom: 0; padding-left: 20px; margin-top: 5px;">
+                    {% for err in summary.errors %}
+                    <li>{{ err }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

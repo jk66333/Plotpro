@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .mapping-card {
+        max-width: 800px;
+        margin: 20px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+    }
+
+    .mapping-header {
+        margin-bottom: 25px;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+
+    .field-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .field-label {
+        font-weight: 600;
+        color: #495057;
+        width: 40%;
+    }
+
+    .field-select {
+        width: 55%;
+    }
+
+    .required-asterisk {
+        color: #dc3545;
+        margin-left: 4px;
+    }
+</style>
+
+<div class="container">
+    <div class="mapping-card">
+        <div class="mapping-header">
+            <h3>Map Excel Columns</h3>
+            <p class="text-muted">Match your Excel headers to the database fields.</p>
+        </div>
+
+        <form action="{{ url_for('process_import_mapping') }}" method="POST">
+            <input type="hidden" name="filename" value="{{ filename }}">
+
+            <div class="field-row">
+                <div class="field-label">Plot Number <span class="required-asterisk">*</span></div>
+                <div class="field-select">
+                    <select name="col_plot_no" class="form-select" required>
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}">{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Date <span class="required-asterisk">*</span></div>
+                <div class="field-select">
+                    <select name="col_date" class="form-select" required>
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'date' in header.lower() %}selected{% endif %}>{{ header
+                            }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Amount <span class="required-asterisk">*</span></div>
+                <div class="field-select">
+                    <select name="col_amount" class="form-select" required>
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'amount' in header.lower() or 'advance' in
+                            header.lower() %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Customer Name</div>
+                <div class="field-select">
+                    <select name="col_customer" class="form-select">
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'customer' in header.lower() or 'name' in header.lower()
+                            %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Payment Mode</div>
+                <div class="field-select">
+                    <select name="col_payment_mode" class="form-select">
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'mode' in header.lower() or 'cash' in header.lower()
+                            %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text text-muted" style="font-size: 11px;">If split into Cash/Bank columns, select
+                        the primary one or leave blank to auto-detect from typical 'Cash'/'Bank' headers.</div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Receipt No</div>
+                <div class="field-select">
+                    <select name="col_receipt_no" class="form-select">
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'receipt' in header.lower() and 'no' in header.lower()
+                            %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Sq Yards (Extent)</div>
+                <div class="field-select">
+                    <select name="col_sq_yards" class="form-select">
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'extent' in header.lower() or 'sq' in header.lower()
+                            %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-label">Basic Price</div>
+                <div class="field-select">
+                    <select name="col_basic_price" class="form-select">
+                        <option value="">-- Select Column --</option>
+                        {% for header in headers %}
+                        <option value="{{ loop.index0 }}" {% if 'price' in header.lower() or 'rate' in header.lower()
+                            or 'basic' in header.lower() %}selected{% endif %}>{{ header }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a href="{{ url_for('import_receipts') }}" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Process Import</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}

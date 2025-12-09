@@ -1,0 +1,1275 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --brand-primary: #f16924;
+        --brand-secondary: #d85e1f;
+    }
+
+    .page-wrapper {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .commission-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .input-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .results-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid var(--brand-primary);
+    }
+
+    .subsection-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        background-color: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 0.2rem rgba(241, 105, 36, 0.15);
+    }
+
+    .input-hint {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .result-group {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .result-group.highlight {
+        background: linear-gradient(135deg, #fff5f0 0%, #ffe8db 100%);
+    }
+
+    .result-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .result-value {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #212529;
+        font-family: 'Courier New', monospace;
+    }
+
+    .result-value.large {
+        font-size: 1.5rem;
+        color: var(--brand-primary);
+    }
+
+    .commission-table {
+        width: 100%;
+        margin-top: 1rem;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 2px solid #f8f9fa;
+    }
+
+    .commission-table th,
+    .commission-table td {
+        padding: 0.75rem;
+        text-align: left;
+        font-size: 0.875rem;
+    }
+
+    .commission-table th {
+        background: var(--brand-primary);
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .commission-table tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    .commission-table td {
+        color: #495057;
+        font-family: 'Courier New', monospace;
+    }
+
+    .commission-table td:first-child {
+        font-weight: 600;
+        font-family: inherit;
+    }
+
+    .btn-submit {
+        background: var(--brand-primary);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .btn-submit:hover {
+        background: var(--brand-secondary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(241, 105, 36, 0.3);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 992px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .results-section {
+            position: static;
+            max-height: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .input-section,
+        .results-section {
+            padding: 1.5rem;
+        }
+    }
+
+    /* Hide first delete button in dynamic rows */
+    .btn-hidden {
+        visibility: hidden;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="container commission-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">{% if edit_mode %}Edit{% else %}Calculate{% endif %} Commission</h1>
+            <p class="page-subtitle">{% if edit_mode %}Update{% else %}Calculate{% endif %} commission distributions for
+                plot sales and mediators</p>
+        </div>
+
+        <form id="commissionForm" method="post" action="{{ url_for('commission_calculator') }}">
+            <!-- Hidden field for edit mode -->
+            <input type="hidden" name="commission_id" value="{% if edit_mode %}{{ commission_id }}{% endif %}">
+            <!-- Hidden element to store commission data for JavaScript -->
+            {% if edit_mode and commission_data %}
+            <div id="commissionData" data-commission="{{ commission_data|tojson }}" style="display: none;"></div>
+            {% endif %}
+
+            <div class="form-grid">
+                <!-- LEFT SIDE: INPUT FIELDS -->
+                <div class="input-section">
+                    <h2 class="section-title">Input Details</h2>
+
+                    <!-- Plot Information -->
+                    <div class="form-group">
+                        <label for="plotNo">Plot No</label>
+                        <input type="text" id="plotNo" name="plot_no" class="form-control"
+                            value="{{ commission_data.plot_no if edit_mode else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectName">Project Name</label>
+                        <select name="project_name" id="projectName" class="form-control">
+                            <option value="">Select Project (Optional)</option>
+                            {% for proj in projects %}
+                            <option value="{{ proj }}" {% if edit_mode and commission_data.get('project_name')==proj
+                                %}selected{% endif %}>{{ proj }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="input-hint">Select the project for this commission</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sqYards">Square Yards</label>
+                        <input type="number" id="sqYards" name="sq_yards" class="form-control" step="0.01"
+                            value="{{ commission_data['sq_yards'] if edit_mode else '' }}" required>
+                        <small class="input-hint">Total area in square yards</small>
+                    </div>
+
+                    <!-- Pricing Section -->
+                    <div class="subsection-title">Pricing Details</div>
+
+                    <div class="form-group">
+                        <label for="originalPrice">Original Price per Sq Yard (₹)</label>
+                        <input type="number" id="originalPrice" name="original_price" class="form-control" step="0.01"
+                            value="{{ commission_data['original_price'] if edit_mode else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="negotiatedPrice">Negotiated Price per Sq Yard (₹)</label>
+                        <input type="number" id="negotiatedPrice" name="negotiated_price" class="form-control"
+                            step="0.01" value="{{ commission_data['negotiated_price'] if edit_mode else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amcCharges">AMC Charges per Sq Yard (₹)</label>
+                        <input type="number" id="amcCharges" name="amc_charges" class="form-control" step="0.01"
+                            value="{{ commission_data['amc_charges'] if edit_mode else '0' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brokerCommission">Broker Commission (₹)</label>
+                        <input type="number" id="brokerCommission" name="broker_commission" class="form-control"
+                            step="0.01" value="{{ commission_data.get('broker_commission', '') if edit_mode else '' }}"
+                            placeholder="Enter Broker Commission">
+                        <small class="input-hint">Rate per Sq. Yard</small>
+                    </div>
+
+                    <!-- Payment Details -->
+                    <div class="subsection-title">Payment Details</div>
+
+                    <div class="form-group">
+                        <label for="advanceReceived">Advance Received (₹)</label>
+                        <input type="number" id="advanceReceived" name="advance_received" class="form-control"
+                            step="0.01" value="{{ commission_data['advance_received'] if edit_mode else '' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="agreementPercentage">Agreement Percentage (%)</label>
+                        <input type="number" id="agreementPercentage" name="agreement_percentage" class="form-control"
+                            step="0.0001" min="0" max="100"
+                            value="{{ (commission_data['agreement_percentage'] * 100) if edit_mode and commission_data['agreement_percentage'] else '' }}"
+                            required>
+                        <small class="input-hint">Enter as percentage (e.g., 25 for 25% or 33.3333 for 33.3333%)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amountPaidAtAgreement">Amount Paid at Agreement (₹)</label>
+                        <input type="number" id="amountPaidAtAgreement" name="amount_paid_at_agreement"
+                            class="form-control" step="0.01"
+                            value="{{ commission_data['amount_paid_at_agreement'] if edit_mode else '' }}" required>
+                    </div>
+
+                    <!-- Commission Rates -->
+                    <div class="subsection-title">Commission Rates (per Sq Yard)</div>
+
+
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cgmName">CGM Name</label>
+                                <input type="text" id="cgmName" name="cgm_name" class="form-control"
+                                    value="{{ commission_data['cgm_name'] if edit_mode else '' }}"
+                                    placeholder="Enter CGM name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="cgmRate">CGM Rate (₹)</label>
+                                <input type="number" id="cgmRate" name="cgm_rate" class="form-control" step="0.01"
+                                    value="{{ commission_data['cgm_rate'] if edit_mode else '0' }}">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Sr. GM Section with Add More -->
+                    <div class="subsection-title d-flex justify-content-between align-items-center">
+                        <span>Sr. GM Details</span>
+                        <button type="button" class="btn btn-sm" style="background: var(--brand-primary); color: white;"
+                            onclick="addSrGMRow()">
+                            <i class="bi bi-plus-circle me-1"></i>Add Sr. GM
+                        </button>
+                    </div>
+                    <div id="srgmContainer">
+                        {% if edit_mode and commission_data.get('srgm_entries') %}
+                        {% for entry in commission_data['srgm_entries'] %}
+                        <div class="row srgm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="srgm_name[]" class="form-control" value="{{ entry.name }}"
+                                        placeholder="Enter Sr. GM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="srgm_rate[]" class="form-control srgm-rate-input"
+                                        step="0.01" value="{{ entry.rate }}" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button"
+                                    class="btn btn-sm btn-danger {{ 'btn-hidden' if loop.first else '' }}"
+                                    onclick="removeRow(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="row srgm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="srgm_name[]" class="form-control"
+                                        placeholder="Enter Sr. GM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="srgm_rate[]" class="form-control srgm-rate-input"
+                                        step="0.01" value="0" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)"
+                                    style="visibility: hidden;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- GM Section with Add More -->
+                    <div class="subsection-title d-flex justify-content-between align-items-center">
+                        <span>GM Details</span>
+                        <button type="button" class="btn btn-sm" style="background: var(--brand-primary); color: white;"
+                            onclick="addGMRow()">
+                            <i class="bi bi-plus-circle me-1"></i>Add GM
+                        </button>
+                    </div>
+                    <div id="gmContainer">
+                        {% if edit_mode and commission_data.get('gm_entries') %}
+                        {% for entry in commission_data['gm_entries'] %}
+                        <div class="row gm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="gm_name[]" class="form-control" value="{{ entry.name }}"
+                                        placeholder="Enter GM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="gm_rate[]" class="form-control gm-rate-input" step="0.01"
+                                        value="{{ entry.rate }}" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button"
+                                    class="btn btn-sm btn-danger {{ 'btn-hidden' if loop.first else '' }}"
+                                    onclick="removeRow(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="row gm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="gm_name[]" class="form-control"
+                                        placeholder="Enter GM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="gm_rate[]" class="form-control gm-rate-input" step="0.01"
+                                        value="0" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)"
+                                    style="visibility: hidden;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- DGM Section with Add More -->
+                    <div class="subsection-title d-flex justify-content-between align-items-center">
+                        <span>DGM Details</span>
+                        <button type="button" class="btn btn-sm" style="background: var(--brand-primary); color: white;"
+                            onclick="addDgmRow()">
+                            <i class="bi bi-plus-circle me-1"></i>Add DGM
+                        </button>
+                    </div>
+                    <div id="dgmContainer">
+                        {% if edit_mode and commission_data.get('dgm_entries') %}
+                        {% for entry in commission_data['dgm_entries'] %}
+                        <div class="row dgm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="dgm_name[]" class="form-control" value="{{ entry.name }}"
+                                        placeholder="Enter DGM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="dgm_rate[]" class="form-control dgm-rate-input"
+                                        step="0.01" value="{{ entry.rate }}" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button"
+                                    class="btn btn-sm btn-danger {{ 'btn-hidden' if loop.first else '' }}"
+                                    onclick="removeRow(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="row dgm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="dgm_name[]" class="form-control"
+                                        placeholder="Enter DGM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="dgm_rate[]" class="form-control dgm-rate-input"
+                                        step="0.01" value="0" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)"
+                                    style="visibility: hidden;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- AGM Section with Add More -->
+                    <div class="subsection-title d-flex justify-content-between align-items-center">
+                        <span>AGM Details</span>
+                        <button type="button" class="btn btn-sm" style="background: var(--brand-primary); color: white;"
+                            onclick="addAgmRow()">
+                            <i class="bi bi-plus-circle me-1"></i>Add AGM
+                        </button>
+                    </div>
+                    <div id="agmContainer">
+                        {% if edit_mode and commission_data.get('agm_entries') %}
+                        {% for entry in commission_data['agm_entries'] %}
+                        <div class="row agm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="agm_name[]" class="form-control" value="{{ entry.name }}"
+                                        placeholder="Enter AGM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="agm_rate[]" class="form-control agm-rate-input"
+                                        step="0.01" value="{{ entry.rate }}" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button"
+                                    class="btn btn-sm btn-danger {{ 'btn-hidden' if loop.first else '' }}"
+                                    onclick="removeRow(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="row agm-row mb-2">
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="text" name="agm_name[]" class="form-control"
+                                        placeholder="Enter AGM name">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <input type="number" name="agm_rate[]" class="form-control agm-rate-input"
+                                        step="0.01" value="0" placeholder="Rate per sq yard">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)"
+                                    style="visibility: hidden;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="bi bi-save me-2"></i>Save & Preview PDF
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary"
+                            style="background: #f16924; color: white; border: none; padding: 0.75rem 2rem; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-block; transition: all 0.3s;"
+                            onmouseover="this.style.background='#d85e1f'" onmouseout="this.style.background='#f16924'">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDE: CALCULATED RESULTS -->
+                <div class="results-section">
+                    <h2 class="section-title">Calculated Results</h2>
+
+                    <!-- Financial Summary -->
+                    <div class="result-group highlight">
+                        <div class="result-label">Total Amount</div>
+                        <div class="result-value large" id="totalAmount">₹0.00</div>
+                    </div>
+
+                    <div class="result-group">
+                        <div class="result-label">W Value</div>
+                        <div class="result-value" id="wValue">₹0.00</div>
+                    </div>
+
+                    <div class="result-group">
+                        <div class="result-label">B Value</div>
+                        <div class="result-value" id="bValue">₹0.00</div>
+                    </div>
+
+                    <div class="result-group">
+                        <div class="result-label">Balance Amount</div>
+                        <div class="result-value" id="balanceAmount">₹0.00</div>
+                    </div>
+
+                    <div class="result-group">
+                        <div class="result-label">Actual Agreement Amount to be Paid</div>
+                        <div class="result-value" id="actualAgreementAmount">₹0.00</div>
+                    </div>
+
+                    <div class="result-group">
+                        <div class="result-label">Agreement Balance</div>
+                        <div class="result-value" id="agreementBalance">₹0.00</div>
+                    </div>
+
+                    <!-- Mediator Commission Table -->
+                    <div class="subsection-title">Mediator Commission</div>
+                    <table class="commission-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Mediator Amount</td>
+                                <td class="text-end" id="mediatorAmount">₹0.00</td>
+                            </tr>
+                            <tr>
+                            <tr>
+                                <td>Mediator Deduction</td>
+                                <td class="text-end">
+                                    <span id="mediatorDeductionDisplay">₹0.00</span>
+                                    <input type="hidden" id="mediatorDeduction" name="mediator_deduction"
+                                        value="{{ commission_data.get('mediator_deduction', '') if edit_mode else '' }}">
+                                </td>
+                            </tr>
+                            </tr>
+                            <tr>
+                                <td>Actual Payment to Mediator</td>
+                                <td class="text-end" id="actualPaymentToMediator">₹0.00</td>
+                            </tr>
+                            <tr>
+                                <td>At Agreement</td>
+                                <td class="text-end" id="mediatorAtAgreement">₹0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Commission Distribution Table -->
+                    <div class="subsection-title">Commission Distribution</div>
+
+                    <table class="commission-table">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Total</th>
+                                <th>At Agreement</th>
+                                <th>At Registration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commissionTableBody">
+                            <tr>
+                                <td>CGM</td>
+                                <td id="cgmTotal">₹0.00</td>
+                                <td id="cgmAgreement">₹0.00</td>
+                                <td id="cgmRegistration">₹0.00</td>
+                            </tr>
+                            <!-- Dynamic rows will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Format number as Indian currency
+    function formatCurrency(value) {
+        if (!value && value !== 0) return '₹0.00';
+
+        const num = parseFloat(value);
+        if (isNaN(num)) return '₹0.00';
+
+        const formatted = num.toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        return '₹' + formatted;
+    }
+
+    // Add Sr. GM Row
+    function addSrGMRow() {
+        const container = document.getElementById('srgmContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'row srgm-row mb-2';
+        newRow.innerHTML = `
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="text" name="srgm_name[]" class="form-control" placeholder="Enter Sr. GM name">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="number" name="srgm_rate[]" class="form-control srgm-rate-input" step="0.01" value="0" placeholder="Rate per sq yard">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        // Add event listener to new input
+        newRow.querySelector('.srgm-rate-input').addEventListener('input', calculateAll);
+    }
+
+    // Add GM Row
+    function addGMRow() {
+        const container = document.getElementById('gmContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'row gm-row mb-2';
+        newRow.innerHTML = `
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="text" name="gm_name[]" class="form-control" placeholder="Enter GM name">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="number" name="gm_rate[]" class="form-control gm-rate-input" step="0.01" value="0" placeholder="Rate per sq yard">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        // Add event listener to new input
+        newRow.querySelector('.gm-rate-input').addEventListener('input', calculateAll);
+    }
+
+    // Add Agent Row
+    function addDgmRow() {
+        const container = document.getElementById('dgmContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'row dgm-row mb-2';
+        newRow.innerHTML = `
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="text" name="dgm_name[]" class="form-control" placeholder="Enter DGM name">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="number" name="dgm_rate[]" class="form-control dgm-rate-input" step="0.01" value="0" placeholder="Rate per sq yard">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        // Add event listener to new input
+
+    }
+
+    function addAgmRow() {
+        const container = document.getElementById('agmContainer');
+        const newRow = document.createElement('div');
+        newRow.className = 'row agm-row mb-2';
+        newRow.innerHTML = `
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="text" name="agm_name[]" class="form-control" placeholder="Enter AGM name">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <input type="number" name="agm_rate[]" class="form-control agm-rate-input" step="0.01" value="0" placeholder="Rate per sq yard">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(newRow);
+        // Add event listener to new input
+        newRow.querySelector('.agm-rate-input').addEventListener('input', calculateAll);
+    }
+
+
+    // Remove Row
+    function removeRow(button) {
+        const row = button.closest('.row');
+        row.remove();
+        calculateAll(); // Recalculate after removing
+    }
+
+    // Helper function to safely parse float values
+    function safeParseFloat(value, defaultValue = 0) {
+        if (value === '' || value === null || value === undefined) {
+            return defaultValue;
+        }
+
+        // Remove commas and whitespace
+        const cleanValue = value.toString().replace(/,/g, '').trim();
+
+        // Handle Indian number format (like "1,23,456.78")
+        const parsedValue = parseFloat(cleanValue);
+
+        return isNaN(parsedValue) ? defaultValue : parsedValue;
+    }
+
+    // Get input values
+    function getInputs() {
+
+
+        // Sum all Sr. GM rates
+        let srgmRateTotal = 0;
+        document.querySelectorAll('input[name="srgm_rate[]"]').forEach(input => {
+            srgmRateTotal += safeParseFloat(input.value);
+        });
+
+        // Sum all GM rates
+        let gmRateTotal = 0;
+        document.querySelectorAll('input[name="gm_rate[]"]').forEach(input => {
+            gmRateTotal += safeParseFloat(input.value);
+        });
+
+        // Sum all DGM rates
+        let dgmRateTotal = 0;
+        document.querySelectorAll('input[name="dgm_rate[]"]').forEach(input => {
+            dgmRateTotal += safeParseFloat(input.value);
+        });
+
+        // Sum all AGM rates
+        let agmRateTotal = 0;
+        document.querySelectorAll('input[name="agm_rate[]"]').forEach(input => {
+            agmRateTotal += safeParseFloat(input.value);
+        });
+
+        return {
+            sqYards: safeParseFloat(document.getElementById('sqYards')?.value),
+            originalPrice: safeParseFloat(document.getElementById('originalPrice')?.value),
+            negotiatedPrice: safeParseFloat(document.getElementById('negotiatedPrice')?.value),
+            amcCharges: safeParseFloat(document.getElementById('amcCharges')?.value, 0),
+            advanceReceived: safeParseFloat(document.getElementById('advanceReceived')?.value),
+            agreementPercentage: safeParseFloat(document.getElementById('agreementPercentage')?.value) / 100,
+            amountPaidAtAgreement: safeParseFloat(document.getElementById('amountPaidAtAgreement')?.value),
+
+            cgmRate: safeParseFloat(document.getElementById('cgmRate')?.value, 0),
+            srgmRate: srgmRateTotal,  // Total from all Sr. GM rows
+            gmRate: gmRateTotal,      // Total from all GM rows
+            dgmRate: dgmRateTotal,    // Total from all DGM rows
+            agmRate: agmRateTotal,    // Total from all AGM rows
+            mediatorDeduction: safeParseFloat(document.getElementById('mediatorDeduction')?.value, 0)
+        };
+    }
+
+    // Calculate all values
+    function autoCalculateMediatorDeduction() {
+        // Formula: (Original Price * Sq Yards) - ((Negotiated Price * Sq Yards) + (AMC Charges * Sq Yards))
+
+        const negotiatedPrice = safeParseFloat(document.getElementById('negotiatedPrice')?.value);
+        const originalPrice = safeParseFloat(document.getElementById('originalPrice')?.value);
+        const amcCharges = safeParseFloat(document.getElementById('amcCharges')?.value, 0); // Default to 0 if empty
+        const sqYards = safeParseFloat(document.getElementById('sqYards')?.value);
+
+        if (negotiatedPrice > 0 && originalPrice > 0 && sqYards > 0) {
+            const deduction = (originalPrice * sqYards) - ((negotiatedPrice * sqYards) + (amcCharges * sqYards));
+
+            const deductionInput = document.getElementById('mediatorDeduction');
+            const deductionDisplay = document.getElementById('mediatorDeductionDisplay');
+
+            if (deductionInput) {
+                deductionInput.value = deduction.toFixed(2);
+                if (deductionDisplay) {
+                    deductionDisplay.textContent = formatCurrency(deduction);
+                }
+
+                // Trigger calculation to update summary
+                calculateAll();
+            }
+        }
+    }
+
+    function calculateAll() {
+        const inp = getInputs();
+
+        // Get Broker Commission
+        inp.brokerCommission = safeParseFloat(document.getElementById('brokerCommission')?.value);
+
+        // Basic calculations
+        const totalAmount = (inp.sqYards * inp.negotiatedPrice) + (inp.amcCharges * inp.sqYards);
+        const wValue = inp.sqYards * 5500;
+        const bValue = totalAmount - wValue;
+        const balanceAmount = totalAmount - inp.advanceReceived;
+        const actualAgreementAmount = totalAmount * inp.agreementPercentage;
+        const agreementBalance = actualAgreementAmount - inp.amountPaidAtAgreement - inp.advanceReceived;
+
+        // Mediator calculations
+        // Agent removed 
+
+
+        // CGM calculations
+        const cgmTotal = inp.cgmRate * inp.sqYards;
+        const cgmAgreement = cgmTotal * inp.agreementPercentage;
+        const cgmRegistration = cgmTotal - cgmAgreement;
+
+        // Update UI
+        document.getElementById('totalAmount').textContent = formatCurrency(totalAmount);
+        document.getElementById('wValue').textContent = formatCurrency(wValue);
+        document.getElementById('bValue').textContent = formatCurrency(bValue);
+        document.getElementById('balanceAmount').textContent = formatCurrency(balanceAmount);
+        document.getElementById('actualAgreementAmount').textContent = formatCurrency(actualAgreementAmount);
+        document.getElementById('agreementBalance').textContent = formatCurrency(agreementBalance);
+
+
+
+        document.getElementById('cgmTotal').textContent = formatCurrency(cgmTotal);
+        document.getElementById('cgmAgreement').textContent = formatCurrency(cgmAgreement);
+        document.getElementById('cgmRegistration').textContent = formatCurrency(cgmRegistration);
+
+        // Mediator Summary Calculations (New Logic)
+        const srgmTotal = inp.srgmRate * inp.sqYards;
+        const gmTotal = inp.gmRate * inp.sqYards;
+        const dgmTotal = inp.dgmRate * inp.sqYards;
+        const agmTotal = inp.agmRate * inp.sqYards;
+
+        // UPDATED LOGIC: Mediator Amount = Sq. Yards * Broker Commission
+        const mediatorAmount = inp.sqYards * inp.brokerCommission;
+
+        // Old logic (Summation) - Kept for reference or internal breakdown if needed later
+        // const mediatorAmountCalculated = cgmTotal + srgmTotal + gmTotal + dgmTotal + agmTotal; 
+
+        const actualPaymentToMediator = mediatorAmount - inp.mediatorDeduction;
+        const mediatorAtAgreement = actualPaymentToMediator * inp.agreementPercentage;
+
+        document.getElementById('mediatorAmount').textContent = formatCurrency(mediatorAmount);
+        document.getElementById('actualPaymentToMediator').textContent = formatCurrency(actualPaymentToMediator);
+        document.getElementById('mediatorAtAgreement').textContent = formatCurrency(mediatorAtAgreement);
+
+        // Update Commission Table
+        updateCommissionTable(inp.agreementPercentage, inp.sqYards);
+    }
+
+    function updateCommissionTable(agreementPercentage, sqYards) {
+        const tbody = document.getElementById('commissionTableBody');
+        // Keep the first row (CGM)
+        const firstRow = tbody.firstElementChild;
+        tbody.innerHTML = '';
+        if (firstRow) tbody.appendChild(firstRow);
+
+        // Helper to add rows
+        const addRows = (selector, roleName) => {
+            document.querySelectorAll(selector).forEach(row => {
+                const nameInput = row.querySelector('input[type="text"]');
+                const rateInput = row.querySelector('input[type="number"]');
+                const name = nameInput ? nameInput.value : '';
+                const rate = parseFloat(rateInput ? rateInput.value : 0) || 0;
+
+                if (name || rate > 0) {
+                    const total = rate * sqYards;
+                    const agreement = total * agreementPercentage;
+                    const registration = total - agreement;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${roleName}${name ? ' - ' + name : ''}</td>
+                        <td>${formatCurrency(total)}</td>
+                        <td>${formatCurrency(agreement)}</td>
+                        <td>${formatCurrency(registration)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        };
+
+        addRows('.srgm-row', 'Sr. GM');
+        addRows('.gm-row', 'GM');
+        addRows('.dgm-row', 'DGM');
+        addRows('.agm-row', 'AGM');
+    }
+
+    async function fetchReceiptData() {
+        const projectSelect = document.getElementById('projectName');
+        const plotNoInput = document.getElementById('plotNo');
+
+        if (!projectSelect || !plotNoInput) return;
+
+        const project = projectSelect.value.trim();
+        const plotNo = plotNoInput.value.trim();
+
+        if (!project || !plotNo) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/plot_lookup?project_name=${encodeURIComponent(project)}&plot_no=${encodeURIComponent(plotNo)}`, {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+
+            if (data.found) {
+                // Populate fields from receipt data
+                const sqYardsInput = document.getElementById('sqYards');
+                const originalPriceInput = document.getElementById('originalPrice');
+                const negotiatedPriceInput = document.getElementById('negotiatedPrice');
+                const advanceReceivedInput = document.getElementById('advanceReceived');
+                const amountPaidAtAgreementInput = document.getElementById('amountPaidAtAgreement');
+
+                // Only populate if fields are empty
+                if (sqYardsInput && !sqYardsInput.value) {
+                    sqYardsInput.value = data.square_yards || '';
+                }
+                // Auto-population disabled for pricing and payment fields as per user request
+                /*
+                if (originalPriceInput && !originalPriceInput.value) {
+                    originalPriceInput.value = data.amount_numeric || '';
+                }
+                if (negotiatedPriceInput && !negotiatedPriceInput.value) {
+                    negotiatedPriceInput.value = data.amount_numeric || '';
+                }
+                if (advanceReceivedInput && !advanceReceivedInput.value) {
+                    advanceReceivedInput.value = data.amount_numeric || '';
+                }
+                if (amountPaidAtAgreementInput && !amountPaidAtAgreementInput.value) {
+                    amountPaidAtAgreementInput.value = data.amount_numeric || '';
+                }
+                */
+
+                // Show a subtle indication that data was auto-populated
+                const fieldsPopulated = document.querySelectorAll('.auto-populated');
+                fieldsPopulated.forEach(el => el.classList.remove('auto-populated'));
+
+                // Only highlight sqYards as it is the only one populated
+                [sqYardsInput].forEach(input => {
+                    if (input && input.value) {
+                        input.style.backgroundColor = '#f0f8ff';
+                        input.classList.add('auto-populated');
+                    }
+                });
+
+                // Remove background color after 2 seconds
+                setTimeout(() => {
+                    document.querySelectorAll('.auto-populated').forEach(input => {
+                        input.style.backgroundColor = '';
+                    });
+                }, 2000);
+
+                // Trigger calculation after population
+                calculateAll();
+            }
+        } catch (error) {
+            console.error('Error fetching receipt data:', error);
+        }
+    }
+
+    // Initialize everything when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM Content Loaded - Initializing Commission Calculator');
+
+        // Add event listeners to all inputs
+        const inputs = document.querySelectorAll('#commissionForm input');
+        inputs.forEach(input => {
+            input.addEventListener('input', calculateAll);
+            input.addEventListener('change', calculateAll);
+            input.addEventListener('change', calculateAll);
+        });
+
+        // Initial calculation on load to populate Mediator Deduction display and others
+        setTimeout(() => {
+            autoCalculateMediatorDeduction();
+            calculateAll();
+        }, 100);
+
+        // Add event listeners also for mediator deduction and broker commission
+        const deductionInput = document.getElementById('mediatorDeduction');
+        if (deductionInput) deductionInput.addEventListener('input', calculateAll);
+
+        const brokerCommissionInput = document.getElementById('brokerCommission');
+        if (brokerCommissionInput) brokerCommissionInput.addEventListener('input', calculateAll);
+
+        // Auto-calculate Mediator Deduction on dependent field changes
+        const deductionDependencies = ['sqYards', 'originalPrice', 'negotiatedPrice', 'amcCharges'];
+        deductionDependencies.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', autoCalculateMediatorDeduction);
+            }
+        });
+
+        // Add event listeners for auto-population
+        const projectSelect = document.getElementById('projectName');
+        const plotNoInput = document.getElementById('plotNo');
+
+        if (projectSelect) projectSelect.addEventListener('change', fetchReceiptData);
+        if (plotNoInput) plotNoInput.addEventListener('blur', fetchReceiptData);
+
+        // Handle form submission
+        const form = document.getElementById('commissionForm');
+        if (form) {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                // Client-side validation
+                const plotNo = document.getElementById('plotNo').value.trim();
+                const projectName = document.getElementById('projectName').value.trim();
+                const sqYards = document.getElementById('sqYards').value.trim();
+                const originalPrice = document.getElementById('originalPrice').value.trim();
+
+                // Helper function to validate numeric input
+                function isValidNumber(value, allowZero = false) {
+                    if (!value || value.trim() === '') return false;
+
+                    // Remove commas and check if it's a valid number
+                    const cleanValue = value.replace(/,/g, '').trim();
+                    const num = parseFloat(cleanValue);
+
+                    return !isNaN(num) && (allowZero ? num >= 0 : num > 0);
+                }
+
+                if (!plotNo) {
+                    alert('Please enter a plot number');
+                    return;
+                }
+
+                if (!projectName) {
+                    alert('Please select a project');
+                    return;
+                }
+
+                if (!isValidNumber(sqYards)) {
+                    alert('Please enter a valid square yards value (greater than 0)');
+                    return;
+                }
+
+                if (!isValidNumber(originalPrice)) {
+                    alert('Please enter a valid original price (greater than 0)');
+                    return;
+                }
+
+                // Validate other numeric fields
+                const negotiatedPrice = document.getElementById('negotiatedPrice').value.trim();
+                if (!isValidNumber(negotiatedPrice)) {
+                    alert('Please enter a valid negotiated price (greater than 0)');
+                    return;
+                }
+
+                const advanceReceived = document.getElementById('advanceReceived').value.trim();
+                if (!isValidNumber(advanceReceived, true)) {
+                    alert('Please enter a valid advance received amount (0 or greater)');
+                    return;
+                }
+
+                const btn = this.querySelector('.btn-submit');
+                const originalText = btn.innerHTML;
+
+                // Show loading state
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+                // Open window immediately to avoid popup blockers
+                const previewWindow = window.open('', '_blank');
+                if (previewWindow) {
+                    previewWindow.document.write('Loading preview...');
+                }
+
+                try {
+                    const formData = new FormData(this);
+
+                    const response = await fetch("{{ url_for('commission_calculator') }}", {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Set URL of the already opened window
+                        if (previewWindow) {
+                            previewWindow.location.href = data.preview_url;
+                        } else {
+                            // Fallback if window failed to open (rare)
+                            window.location.href = data.preview_url;
+                        }
+                    } else {
+                        if (previewWindow) previewWindow.close();
+                        alert('Error: ' + (data.error || 'Unknown error occurred while processing commission'));
+                    }
+
+                } catch (error) {
+                    if (previewWindow) previewWindow.close();
+                    console.error('Error:', error);
+
+                    // Show more specific error message
+                    let errorMessage = 'An error occurred. Please try again.';
+                    if (error.message.includes('NetworkError')) {
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                    } else if (error.message.includes('Failed to fetch')) {
+                        errorMessage = 'Server error. Please try again in a few moments.';
+                    } else if (error.message) {
+                        errorMessage = `Error: ${error.message}`;
+                    }
+
+                    alert(errorMessage);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        }
+
+        // Initial calculation
+        calculateAll();
+
+        // Fallback calculation
+        setTimeout(calculateAll, 500);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,716 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --brand-primary: #f16924;
+        --brand-secondary: #d85e1f;
+    }
+
+    .performance-page {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .filter-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid var(--brand-primary);
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0;
+    }
+
+    .performance-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .performance-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .performance-table thead th {
+        background: linear-gradient(135deg, #f16924 0%, #d85e1f 100%);
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+        border: none;
+    }
+
+    .performance-table thead th:first-child {
+        border-top-left-radius: 8px;
+    }
+
+    .performance-table thead th:last-child {
+        border-top-right-radius: 8px;
+    }
+
+    .performance-table tbody tr {
+        transition: all 0.3s;
+    }
+
+    .performance-table tbody tr:hover {
+        background: #f8f9fa;
+        transform: scale(1.01);
+    }
+
+    .performance-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        color: #495057;
+    }
+
+    .performance-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .rank-1 {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    }
+
+    .rank-2 {
+        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(148, 163, 184, 0.4);
+    }
+
+    .rank-3 {
+        background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+    }
+
+    .rank-other {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+
+    .metric-value {
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: #212529;
+    }
+
+    .form-select {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.625rem 1rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .form-select:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 0.2rem rgba(241, 105, 36, 0.15);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    /* Grid Layout for Tables */
+    .performance-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+        .performance-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .performance-card.full-width {
+        grid-column: 1 / -1;
+    }
+</style>
+
+<div class="performance-page">
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">Mediator Performance</h1>
+            <p class="page-subtitle">
+                {% if selected_project %}
+                {{ selected_project }} - CGM Performance Metrics
+                {% else %}
+                All Projects - CGM Performance Metrics
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="projectFilter" class="form-label fw-bold">Filter by Project</label>
+                    <select id="projectFilter" class="form-select" onchange="updateFilters()">
+                        <option value="">All Projects</option>
+                        {% for proj in projects %}
+                        <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="cgmFilter" class="form-label fw-bold">Filter by CGM</label>
+                    <select id="cgmFilter" class="form-select" onchange="updateFilters()">
+                        <option value="">All CGMs (Top 5)</option>
+                        {% for cgm in all_cgms %}
+                        <option value="{{ cgm }}" {% if selected_cgm==cgm %}selected{% endif %}>{{ cgm }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="monthFilter" class="form-label fw-bold">
+                        <i class="bi bi-calendar3 me-2"></i>Filter by Month
+                    </label>
+                    <select id="monthFilter" class="form-select" onchange="updateFilters()">
+                        <option value="">All Time</option>
+                        {% for month in available_months %}
+                        <option value="{{ month }}" {% if selected_month==month %}selected{% endif %}>
+                            {{ month }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 5 Overall Earners - Full Width -->
+        <div class="performance-card full-width">
+            <h2 class="card-title">
+                <i class="bi bi-trophy-fill me-2" style="color: #fbbf24;"></i>
+                Top 5 Overall Earners (All Roles)
+            </h2>
+            {% if top_5_overall %}
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Total Earnings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in top_5_overall %}
+                    <tr>
+                        <td>
+                            {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                {% else %}
+                                <span class="rank-badge rank-other">
+                                    {% endif %}
+                                    {{ loop.index }}
+                                </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('mediator_details', name=item.name, role=item.role, project=selected_project, month=selected_month) }}"
+                                style="text-decoration: none; color: inherit;">
+                                <strong>{{ item.name }}</strong>
+                            </a>
+                        </td>
+                        <td>
+                            {% set badge_bg_color = '' %}
+                            {% if item.role == 'CGM' %}
+                            {% set badge_bg_color = 'var(--brand-primary)' %}
+                            {% elif item.role == 'Sr.GM' %}
+                            {% set badge_bg_color = '#10b981' %}
+                            {% elif item.role == 'GM' %}
+                            {% set badge_bg_color = '#3b82f6' %}
+                            {% else %}
+                            {% set badge_bg_color = '#8b5cf6' %}
+                            {% endif %}
+                            <span class="badge"
+                                style="background: {{ badge_bg_color }}; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem;">
+                                {{ item.role }}
+                            </span>
+                        </td>
+                        <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>No data available</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Performance Metrics Grid -->
+        <div class="performance-grid">
+            <!-- Top 5 CGMs by Plots Sold -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-trophy me-2" style="color: var(--brand-primary);"></i>
+                    Top CGMs by Plots Sold
+                </h2>
+                {% if top_plots_sold %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>CGM Name</th>
+                            <th>Plots Sold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_plots_sold %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.cgm_name, role='CGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.cgm_name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">{{ item.plots_count }}</span> plots</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Top 5 CGMs by Square Yards Sold -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-rulers me-2" style="color: var(--brand-primary);"></i>
+                    Top CGMs by Square Yards Sold
+                </h2>
+                {% if top_sq_yards %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>CGM Name</th>
+                            <th>Square Yards</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_sq_yards %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.cgm_name, role='CGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.cgm_name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">{{ "%.2f"|format(item.total_sq_yards) }}</span> sq yds</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- CGM Team Total Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-currency-rupee me-2" style="color: var(--brand-primary);"></i>
+                    CGM Team Total Earnings
+                </h2>
+                {% if top_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>CGM Name</th>
+                            <th>Total Commission</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.cgm_name, role='CGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.cgm_name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total_commission) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- CGM Individual Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-person-badge me-2" style="color: var(--brand-primary);"></i>
+                    CGM Individual Earnings
+                </h2>
+                {% if cgm_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>CGM Name</th>
+                            <th>Total Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cgm_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.name, role='CGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sr.GM Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-person-badge me-2" style="color: #10b981;"></i>
+                    Sr.GM Earnings
+                </h2>
+                {% if srgm_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Sr.GM Name</th>
+                            <th>Total Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in srgm_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.name, role='Sr.GM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- GM Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-person-badge me-2" style="color: #3b82f6;"></i>
+                    GM Earnings
+                </h2>
+                {% if gm_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>GM Name</th>
+                            <th>Total Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in gm_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.name, role='GM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- DGM Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-person-badge me-2" style="color: #8b5cf6;"></i>
+                    DGM Earnings
+                </h2>
+                {% if dgm_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>DGM Name</th>
+                            <th>Total Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dgm_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.name, role='DGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- AGM Earnings -->
+            <div class="performance-card">
+                <h2 class="card-title">
+                    <i class="bi bi-person-badge me-2" style="color: #ec4899;"></i>
+                    AGM Earnings
+                </h2>
+                {% if agm_earnings %}
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>AGM Name</th>
+                            <th>Total Earnings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in agm_earnings %}
+                        <tr>
+                            <td>
+                                {% if loop.index <= 3 %} <span class="rank-badge rank-{{ loop.index }}">
+                                    {% else %}
+                                    <span class="rank-badge rank-other">
+                                        {% endif %}
+                                        {{ loop.index }}
+                                    </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('mediator_details', name=item.name, role='AGM', project=selected_project, month=selected_month) }}"
+                                    style="text-decoration: none; color: inherit;">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td><span class="metric-value">₹{{ "{:,.2f}".format(item.total) }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No data available</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+        <!-- End Performance Metrics Grid -->
+        <!-- Back to Dashboard Button -->
+        <div class="text-center mt-4 mb-4">
+            <a href="{{ url_for('dashboard', project=selected_project) if selected_project else url_for('dashboard') }}"
+                class="btn btn-secondary"
+                style="background: #f16924; color: white; border: none; padding: 0.75rem 2rem; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-block; transition: all 0.3s;"
+                onmouseover="this.style.background='#d85e1f'" onmouseout="this.style.background='#f16924'">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function updateFilters() {
+        const project = document.getElementById('projectFilter').value;
+        const cgm = document.getElementById('cgmFilter').value;
+        const month = document.getElementById('monthFilter').value;
+
+        let url = '{{ url_for("mediator_performance") }}';
+        const params = new URLSearchParams();
+
+        if (project) params.append('project', project);
+        if (cgm) params.append('cgm', cgm);
+        if (month) params.append('month', month);
+
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        window.location.href = url;
+    }
+</script>
+
+{% endblock %}

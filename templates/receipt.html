@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="receipt-wrapper">
+  <div class="receipt-container">
+
+    <!-- HEADER -->
+    <div class="receipt-header">
+
+      <!-- Smaller Centered Logo -->
+      <img src="{{ url_for('static', filename='images/logo.png') }}"
+           alt="Logo" class="receipt-logo">
+
+      <div class="company-details">
+        <h2 class="company-name">Srinidhi Group</h2>
+        <p class="company-address">
+          Opp. Sri Ram Hospitals, Pushpa Hotel Road, Vijayawada
+        </p>
+      </div>
+
+      <div class="receipt-info">
+        <div class="info-block">
+          <span class="label">Receipt No</span>
+          <span class="value">{{ r.no }}</span>
+        </div>
+        <div class="info-block">
+          <span class="label">Date</span>
+          <span class="value">{{ r.date }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="divider">
+
+    <!-- MAIN BODY -->
+    <div class="receipt-body">
+
+      <div class="row">
+        <div class="col">
+          <label>Project Name</label>
+          <div class="value">{{ r.project_name }}</div>
+        </div>
+        <div class="col">
+          <label>Venture</label>
+          <div class="value">{{ r.venture }}</div>
+        </div>
+      </div>
+
+      <div class="row full">
+        <label>Customer Name</label>
+        <div class="value big">{{ r.customer_name }}</div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Plot No</label>
+          <div class="value">{{ r.plot_no }}</div>
+        </div>
+        <div class="col">
+          <label>Square Yards</label>
+          <div class="value">{{ r.square_yards }}</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Payment Mode</label>
+          <div class="value">{{ r.payment_mode }}</div>
+        </div>
+        <div class="col amount-right">
+          <label>Amount (₹)</label>
+          <div class="amount-value">₹ {{ r.amount_formatted }}</div>
+        </div>
+      </div>
+
+      <div class="row full">
+        <label>Purpose</label>
+        <div class="value">{{ r.purpose }}</div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Drawn Bank</label>
+          <div class="value">{{ r.drawn_bank }}</div>
+        </div>
+        <div class="col">
+          <label>Branch</label>
+          <div class="value">{{ r.branch }}</div>
+        </div>
+      </div>
+
+      <!-- AMOUNT IN WORDS -->
+      <div class="words-box">
+        <div class="words-title">Amount in Words</div>
+        <div class="words-text">{{ r.amount_words }}</div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="receipt-footer">
+      <div class="footer-left">For Srinidhi Group</div>
+
+      <div class="signatures">
+        <div class="sig">
+          <div class="sig-line"></div>
+          <div class="sig-label">Cashier</div>
+        </div>
+        <div class="sig">
+          <div class="sig-line"></div>
+          <div class="sig-label">Accountant</div>
+        </div>
+        <div class="sig">
+          <div class="sig-line"></div>
+          <div class="sig-label">Authorised Signature</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="actions">
+  <button onclick="window.print()" class="btn">Print / Save PDF</button>
+
+  <!-- Replaced anchor with JS downloader button -->
+  <button id="downloadPdfBtn" class="btn" type="button"
+          data-pdf-url="{{ url_for('receipt_pdf', receipt_id=r.id) }}"
+          data-default-filename="receipt_{{ (r.no or r.id)|replace(' ', '_') }}.pdf">
+    Download PDF
+  </button>
+
+  <a href="{{ url_for('edit_receipt', receipt_id=r.id) }}"><button class="btn ghost">Edit</button></a>
+  <a href="{{ url_for('index') }}"><button class="btn ghost">New Receipt</button></a>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('downloadPdfBtn');
+    if (!btn) return;
+
+    // sanitize filename fragment (allow only safe chars)
+    function sanitizeFilename(name, fallback) {
+      if (!name) return fallback || 'receipt';
+      const safe = name.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '');
+      return safe || (fallback || 'receipt');
+    }
+
+    function filenameFromContentDisposition(header) {
+      if (!header) return null;
+      const filenameStar = /filename\*\s*=\s*([^;]+)/i.exec(header);
+      if (filenameStar) {
+        try {
+          const part = filenameStar[1].trim();
+          const m = part.match(/^(?:[A-Za-z0-9_-]+)''(.+)$/);
+          if (m && m[1]) {
+            return decodeURIComponent(m[1]);
+          }
+          return part.replace(/(^"|"$)/g, '');
+        } catch (e) { /*ignore*/ }
+      }
+      const filenameMatch = /filename\s*=\s*"(.*?)"/i.exec(header) || /filename\s*=\s*([^;]+)/i.exec(header);
+      if (filenameMatch) {
+        return filenameMatch[1].replace(/^"|"$/g, '').trim();
+      }
+      return null;
+    }
+
+    btn.addEventListener('click', async function () {
+      const url = btn.getAttribute('data-pdf-url');
+      if (!url) { alert('No PDF URL configured'); return; }
+      btn.disabled = true;
+      const defaultName = btn.getAttribute('data-default-filename') || 'receipt.pdf';
+      try {
+        const resp = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/pdf' },
+          credentials: 'same-origin'
+        });
+
+        if (!resp.ok) {
+          const txt = await resp.text().catch(()=>null);
+          throw new Error('Server returned ' + resp.status + (txt ? (': ' + txt) : ''));
+        }
+
+        const blob = await resp.blob();
+        const cd = resp.headers.get('Content-Disposition');
+        let filename = filenameFromContentDisposition(cd) || defaultName;
+        filename = sanitizeFilename(filename, 'receipt.pdf');
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+      } catch (err) {
+        console.error('PDF download error', err);
+        alert('Failed to download PDF: ' + (err.message || err));
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

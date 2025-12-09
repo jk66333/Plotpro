@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .layout-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 24px;
+        max-width: 800px;
+        margin: 20px auto;
+    }
+
+    .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .project-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+    }
+
+    .project-table th {
+        text-align: left;
+        padding: 12px;
+        background: #f8f9fa;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 13px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .project-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+        color: #2c3e50;
+    }
+
+    .project-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .action-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-edit {
+        background: #e3f2fd;
+        color: #1976d2;
+        margin-right: 8px;
+    }
+
+    .btn-edit:hover {
+        background: #bbdefb;
+    }
+
+    .btn-delete {
+        background: #ffebee;
+        color: #d32f2f;
+    }
+
+    .btn-delete:hover {
+        background: #ffcdd2;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        animation: modalSlide 0.3s ease-out;
+    }
+
+    @keyframes modalSlide {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #2c3e50;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        border-color: #3f51b5;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.1);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+    }
+
+    .btn-save {
+        background: #3f51b5;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .alert-box {
+        padding: 12px 16px;
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-icon {
+        font-size: 18px;
+    }
+
+    .btn-archive {
+        background: #fff3e0;
+        color: #ef6c00;
+        margin-right: 8px;
+    }
+
+    .btn-archive:hover {
+        background: #ffe0b2;
+    }
+
+    .btn-restore {
+        background: #e8f5e9;
+        color: #2e7d32;
+        margin-right: 8px;
+    }
+
+    .btn-restore:hover {
+        background: #c8e6c9;
+    }
+
+    .section-header-small {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 24px 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #f1f1f1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+</style>
+
+<div class="layout-card">
+    <div class="header-flex">
+        <div>
+            <h1 class="page-title">Layout Management</h1>
+            <div style="color: #6c757d; font-size: 14px; margin-top: 4px;">Manage your projects and layouts</div>
+        </div>
+        <button onclick="openAddModal()" class="action-btn btn-save" style="font-size: 14px;">
+            + Add New Project
+        </button>
+    </div>
+
+    <!-- Alert about Vishvam -->
+    <div class="alert-box">
+        <span class="alert-icon">⚠️</span>
+        <div>
+            <strong>Note:</strong> The "Vishvam" layout viewer requires a project specifically named "Vishvam".
+            Please do not rename or delete the "Vishvam" project if you wish to use the visual map features.
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div style="padding: 10px; border-radius: 6px; margin-bottom: 16px; 
+                            background: {{ '#d1e7dd' if category=='success' else '#f8d7da' }}; 
+                            color: {{ '#0f5132' if category=='success' else '#842029' }};">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <!-- Active Projects Section -->
+    <div class="section-header-small">
+        <span>Active Projects</span>
+        <span style="background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+            {{ active_projects|length }}
+        </span>
+    </div>
+
+    {% if active_projects %}
+    <table class="project-table">
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th style="width: 250px; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in active_projects %}
+            <tr>
+                <td><strong>{{ p.name }}</strong></td>
+                <td style="text-align: right;">
+                    <button onclick="openEditModal('{{ p.id }}', '{{ p.name }}')" class="action-btn btn-edit">
+                        Edit
+                    </button>
+                    <button onclick="openArchiveModal('{{ p.id }}', '{{ p.name }}')" class="action-btn btn-archive">
+                        Archive
+                    </button>
+                    <button onclick="openDeleteModal('{{ p.id }}', '{{ p.name }}')" class="action-btn btn-delete">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        No active projects found. Click "Add New Project" to create one.
+    </div>
+    {% endif %}
+
+    <!-- Archived Projects Section -->
+    {% if archived_projects %}
+    <div class="section-header-small" style="margin-top: 40px; color: #666;">
+        <span>Archived Projects</span>
+        <span style="background: #f5f5f5; color: #666; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+            {{ archived_projects|length }}
+        </span>
+    </div>
+
+    <table class="project-table" style="opacity: 0.8;">
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th style="width: 200px; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in archived_projects %}
+            <tr>
+                <td style="color: #666;">{{ p.name }}</td>
+                <td style="text-align: right;">
+                    <button onclick="openUnarchiveModal('{{ p.id }}', '{{ p.name }}')" class="action-btn btn-restore">
+                        Restore
+                    </button>
+                    <button onclick="openDeleteModal('{{ p.id }}', '{{ p.name }}')" class="action-btn btn-delete">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+<!-- Add Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 16px;">Add New Project</h3>
+        <form action="{{ url_for('add_project') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">Project Name</label>
+                <input type="text" name="project_name" class="form-input" placeholder="e.g. Prakruthi" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="closeModal('addModal')" class="action-btn btn-cancel">Cancel</button>
+                <button type="submit" class="action-btn btn-save">Create Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 16px;">Edit Project</h3>
+        <form action="{{ url_for('update_project') }}" method="POST">
+            <input type="hidden" name="project_id" id="edit_project_id">
+            <div class="form-group">
+                <label class="form-label">Project Name</label>
+                <input type="text" name="new_name" id="edit_project_name" class="form-input" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="closeModal('editModal')" class="action-btn btn-cancel">Cancel</button>
+                <button type="submit" class="action-btn btn-save">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Archive Modal -->
+<div id="archiveModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #ef6c00;">Archive Project?</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.5;">
+            Are you sure you want to archive <strong id="archive_project_name_display"></strong>?
+            <br><br>
+            It will be hidden from new receipts but data will be preserved. You can restore it later.
+        </p>
+        <form action="{{ url_for('archive_project') }}" method="POST">
+            <input type="hidden" name="project_id" id="archive_project_id">
+            <div class="modal-actions">
+                <button type="button" onclick="closeModal('archiveModal')" class="action-btn btn-cancel">Cancel</button>
+                <button type="submit" class="action-btn btn-archive">Archive Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Unarchive (Restore) Modal -->
+<div id="unarchiveModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #2e7d32;">Restore Project?</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.5;">
+            Are you sure you want to restore <strong id="unarchive_project_name_display"></strong>?
+            <br><br>
+            It will reappear in project selection lists.
+        </p>
+        <form action="{{ url_for('unarchive_project') }}" method="POST">
+            <input type="hidden" name="project_id" id="unarchive_project_id">
+            <div class="modal-actions">
+                <button type="button" onclick="closeModal('unarchiveModal')"
+                    class="action-btn btn-cancel">Cancel</button>
+                <button type="submit" class="action-btn btn-restore">Restore Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; margin-bottom: 16px; color: #dc3545;">Delete Project?</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.5;">
+            Are you sure you want to delete project <strong id="delete_project_name_display"></strong>?
+            <br><br>
+            <span style="color: #dc3545; font-size: 13px;">
+                Warning: This might cause issues for receipts associated with this project name.
+            </span>
+        </p>
+        <form action="{{ url_for('delete_project') }}" method="POST">
+            <input type="hidden" name="project_id" id="delete_project_id">
+            <div class="modal-actions">
+                <button type="button" onclick="closeModal('deleteModal')" class="action-btn btn-cancel">Cancel</button>
+                <button type="submit" class="action-btn btn-danger">Delete Project</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('active');
+        document.querySelector('#addModal input[name="project_name"]').focus();
+    }
+
+    function openEditModal(id, name) {
+        document.getElementById('edit_project_id').value = id;
+        document.getElementById('edit_project_name').value = name;
+        document.getElementById('editModal').classList.add('active');
+        document.getElementById('edit_project_name').select();
+    }
+
+    function openArchiveModal(id, name) {
+        document.getElementById('archive_project_id').value = id;
+        document.getElementById('archive_project_name_display').textContent = name;
+        document.getElementById('archiveModal').classList.add('active');
+    }
+
+    function openUnarchiveModal(id, name) {
+        document.getElementById('unarchive_project_id').value = id;
+        document.getElementById('unarchive_project_name_display').textContent = name;
+        document.getElementById('unarchiveModal').classList.add('active');
+    }
+
+    function openDeleteModal(id, name) {
+        document.getElementById('delete_project_id').value = id;
+        document.getElementById('delete_project_name_display').textContent = name;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    // Close modal if clicked outside
+    window.onclick = function (event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.classList.remove('active');
+        }
+    }
+
+    // Esc key to close
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape") {
+            document.querySelectorAll('.modal.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+    });
+</script>
+
+{% endblock %}

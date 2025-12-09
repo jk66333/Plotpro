@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <h2 class="mb-4 fw-bold text-dark">Create Receipts</h2>
+            <p class="text-muted mb-5">Choose how you would like to add receipts to the system.</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center g-4">
+        <!-- Single Receipt Option -->
+        <div class="col-md-5 col-lg-4">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-lift text-center p-4">
+                    <div class="card-body">
+                        <div class="icon-circle bg-danger bg-opacity-10 text-danger mb-4 mx-auto"
+                            style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-plus-circle fs-1"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark mb-3">New Receipt</h4>
+                        <p class="card-text text-muted">Create a single receipt manually. Best for individual entries.
+                        </p>
+                        <div class="btn btn-outline-danger mt-3">Create New</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Bulk Import Option -->
+        <div class="col-md-5 col-lg-4">
+            <a href="{{ url_for('import_receipts') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-lift text-center p-4">
+                    <div class="card-body">
+                        <div class="icon-circle bg-success bg-opacity-10 text-success mb-4 mx-auto"
+                            style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-file-earmark-spreadsheet fs-1"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark mb-3">Bulk Import</h4>
+                        <p class="card-text text-muted">Upload an Excel file to import multiple receipts at once.</p>
+                        <div class="btn btn-outline-success mt-3">Import Excel</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Delete Receipts Option -->
+        <div class="col-md-5 col-lg-4">
+            <a href="{{ url_for('delete_receipts') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm hover-lift text-center p-4">
+                    <div class="card-body">
+                        <div class="icon-circle bg-danger bg-opacity-10 text-danger mb-4 mx-auto"
+                            style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-trash fs-1"></i>
+                        </div>
+                        <h4 class="card-title fw-bold text-dark mb-3">Delete Receipts</h4>
+                        <p class="card-text text-muted">View receipts by plot and delete them individually or in bulk.
+                        </p>
+                        <div class="btn btn-outline-danger mt-3">Delete Receipts</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-auto">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-link text-muted text-decoration-none">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+</style>
+
+{% endblock %}

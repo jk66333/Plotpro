@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --brand-primary: #f16924;
+        --brand-secondary: #d85e1f;
+    }
+
+    .page-wrapper {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .form-select {
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.625rem 1rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .form-select:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 0.2rem rgba(241, 105, 36, 0.15);
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .metric-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        color: white;
+        margin-bottom: 1.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 0.75rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #212529;
+        margin-bottom: 0.5rem;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .card-blue .metric-icon {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .card-green .metric-icon {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .card-orange .metric-icon {
+        background: linear-gradient(135deg, #f16924 0%, #d85e1f 100%);
+    }
+
+    .card-red .metric-icon {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .btn-back {
+        background: var(--brand-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: var(--brand-secondary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(241, 105, 36, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-3 mb-lg-0">
+                    <h1 class="page-title">Account Summary</h1>
+                    <p class="page-subtitle">
+                        {% if selected_project %}
+                        Financial overview for {{ selected_project }}
+                        {% else %}
+                        Financial overview across all projects
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-lg-6">
+                    <form method="get" action="{{ url_for('account_summary') }}"
+                        class="d-flex align-items-center gap-3 justify-content-lg-end">
+                        <label for="projectFilter" class="fw-semibold text-secondary mb-0 text-nowrap">Filter by
+                            Project:</label>
+                        <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
+                            style="max-width: 280px;">
+                            <option value="">All Projects</option>
+                            {% for proj in projects %}
+                            <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card card-blue">
+                    <div class="metric-icon">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <div class="metric-label">Plots Sold Till Date</div>
+                    <div class="metric-value">{{ plots_sold }}</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card card-green">
+                    <div class="metric-icon">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                    <div class="metric-label">Total Revenue Generated</div>
+                    <div class="metric-value">₹{{ total_revenue }}</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card card-orange">
+                    <div class="metric-icon">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="metric-label">Total Amount Paid</div>
+                    <div class="metric-value">₹{{ total_paid }}</div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="metric-card card-red">
+                    <div class="metric-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="metric-label">Balance Yet to be Paid</div>
+                    <div class="metric-value">₹{{ total_balance }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center mt-5">
+            <a href="{{ url_for('dashboard', project=selected_project) if selected_project else url_for('dashboard') }}"
+                class="btn-back">
+                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

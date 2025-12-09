@@ -1,0 +1,32 @@
+test_get_commission_calculator (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+
+======================================================================
+FAIL: test_get_commission_calculator (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 134, in test_get_commission_calculator
+    self.assertEqual(response.status_code, 200)
+AssertionError: 302 != 200
+
+======================================================================
+FAIL: test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 241, in test_post_valid_commission
+    self.assertIsNotNone(row)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 340, in test_post_with_ignored_agent_data
+    self.assertIsNotNone(row)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.063s
+
+FAILED (failures=3)

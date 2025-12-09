@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .analytics-page {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+
+  .chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 1rem;
+  }
+</style>
+
+<div class="analytics-page" id="analytics-page" data-selected-project="{{ selected_project|tojson }}">
+  <div class="container">
+    <div class="page-header mb-4">
+      <div class="row align-items-center">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+          <h1 class="page-title">Analytics</h1>
+          <p class="page-subtitle">
+            {% if selected_project %}
+            {{ selected_project }} – Detailed Analytics
+            {% else %}
+            All Projects – Detailed Analytics
+            {% endif %}
+          </p>
+        </div>
+        <div class="col-lg-6">
+          <form method="get" action="{{ url_for('analytics') }}" class="project-filter-wrapper justify-content-lg-end">
+            <label for="projectFilter" class="filter-label">Filter by Project:</label>
+            <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
+              style="max-width: 280px;">
+              <option value="">All Projects</option>
+              {% for proj in projects %}
+              <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Receipts Analytics -->
+    <div class="section-header">
+      <h2 class="section-title">Receipts Analytics</h2>
+    </div>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-8">
+        <div class="chart-container">
+          <div class="chart-title">Collections by Month</div>
+          <div id="chart_amount_by_month" style="width: 100%; height: 400px;"></div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="chart-container">
+          <div class="chart-title">Collections by Project</div>
+          <div id="chart_amount_by_project" style="width: 100%; height: 250px;"></div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Collections by Payment Mode</div>
+          <div id="chart_amount_by_payment_mode" style="width: 100%; height: 250px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commissions Analytics -->
+    <div class="section-header">
+      <h2 class="section-title">Commissions Analytics</h2>
+    </div>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-12">
+        <div class="chart-container">
+          <div class="chart-title">Total Commission by Project</div>
+          <div id="chart_commission_by_project" style="width: 100%; height: 350px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CGM Performance -->
+    <div class="section-header">
+      <h2 class="section-title">CGM Performance</h2>
+    </div>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-12">
+        <div class="chart-container">
+          <div class="chart-title">Plots Sold by CGM</div>
+          <div id="chart_cgm_plot_sales" style="width: 100%; height: 350px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Inventory Analytics -->
+    <div class="section-header">
+      <h2 class="section-title">Projects Inventory</h2>
+    </div>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-12">
+        <div class="chart-container">
+          <div class="chart-title">Plots Sold vs Available per Project</div>
+          <div id="chart_projects_inventory" style="width: 100%; height: 350px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+  (function () {
+    // Safely inject selected_project from Flask into a data attribute
+    var selectedProject = (function () {
+      var el = document.getElementById('analytics-page');
+      return el ? (el.getAttribute('data-selected-project') || '') : '';
+    })();
+
+    function buildUrl(path) {
+      if (!selectedProject) return path;
+      var sep = path.indexOf('?') >= 0 ? '&' : '?';
+      return path + sep + 'project=' + encodeURIComponent(selectedProject);
+    }
+
+    function fetchJson(url) {
+      return fetch(url, { credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    }
+
+    function drawCharts() {
+      Promise.all([
+        fetchJson(buildUrl('{{ url_for("stats_amount_by_month") }}')),
+        fetchJson(buildUrl('{{ url_for("stats_amount_by_project") }}')),
+        fetchJson(buildUrl('{{ url_for("stats_amount_by_payment_mode") }}')),
+        fetchJson(buildUrl('{{ url_for("stats_commission_by_project") }}')),
+        fetchJson(buildUrl('{{ url_for("stats_projects_inventory") }}')),
+        fetchJson(buildUrl('{{ url_for("stats_cgm_plot_sales") }}'))
+      ]).then(function (results) {
+        var byMonth = results[0] || [];
+        var byProject = results[1] || [];
+        var byMode = results[2] || [];
+        var commissionByProject = results[3] || [];
+        var projectsInventory = results[4] || [];
+        var cgmPlotSales = results[5] || [];
+
+        // Receipts: Amount by Month (Column Chart)
+        var dataMonth = new google.visualization.DataTable();
+        dataMonth.addColumn('string', 'Month');
+        dataMonth.addColumn('number', 'Total');
+        byMonth.forEach(function (row) {
+          dataMonth.addRow([row.month || 'Unknown', row.total || 0]);
+        });
+        new google.visualization.ColumnChart(document.getElementById('chart_amount_by_month')).draw(dataMonth, {
+          legend: { position: 'none' },
+          height: 400,
+          chartArea: { left: 60, top: 20, right: 20, bottom: 60 },
+          hAxis: { slantedText: true, slantedTextAngle: 45 },
+          colors: ['#f16924']
+        });
+
+        // Receipts: Amount by Project (Pie Chart)
+        var dataProject = new google.visualization.DataTable();
+        dataProject.addColumn('string', 'Project');
+        dataProject.addColumn('number', 'Total');
+        byProject.forEach(function (row) {
+          dataProject.addRow([row.project || 'Unknown', row.total || 0]);
+        });
+        new google.visualization.PieChart(document.getElementById('chart_amount_by_project')).draw(dataProject, {
+          legend: { position: 'right' },
+          height: 250,
+          chartArea: { left: 10, top: 10, right: 10, bottom: 10 }
+        });
+
+        // Receipts: Amount by Payment Mode (Pie Chart)
+        var dataMode = new google.visualization.DataTable();
+        dataMode.addColumn('string', 'Mode');
+        dataMode.addColumn('number', 'Total');
+        byMode.forEach(function (row) {
+          dataMode.addRow([row.mode || 'Unknown', row.total || 0]);
+        });
+        new google.visualization.PieChart(document.getElementById('chart_amount_by_payment_mode')).draw(dataMode, {
+          legend: { position: 'right' },
+          height: 250,
+          chartArea: { left: 10, top: 10, right: 10, bottom: 10 }
+        });
+
+        // Commissions: by Project (Pie Chart)
+        var dataCommProj = new google.visualization.DataTable();
+        dataCommProj.addColumn('string', 'Project');
+        dataCommProj.addColumn('number', 'Total Commission');
+        commissionByProject.forEach(function (row) {
+          dataCommProj.addRow([row.project || 'Unknown', row.total || 0]);
+        });
+        new google.visualization.PieChart(document.getElementById('chart_commission_by_project')).draw(dataCommProj, {
+          legend: { position: 'right' },
+          height: 350,
+          chartArea: { left: 10, top: 10, right: 10, bottom: 10 }
+        });
+
+
+
+        // CGM: Plots Sold (Column Chart)
+        var dataCgmSales = new google.visualization.DataTable();
+        dataCgmSales.addColumn('string', 'CGM');
+        dataCgmSales.addColumn('number', 'Plots Sold');
+        cgmPlotSales.forEach(function (row) {
+          dataCgmSales.addRow([row.cgm || 'Unknown', row.plots_sold || 0]);
+        });
+        new google.visualization.ColumnChart(document.getElementById('chart_cgm_plot_sales')).draw(dataCgmSales, {
+          legend: { position: 'none' },
+          height: 350,
+          chartArea: { left: 60, top: 20, right: 20, bottom: 60 },
+          hAxis: { slantedText: true, slantedTextAngle: 45 },
+          colors: ['#3b82f6']
+        });
+
+
+
+        // Projects Inventory: Sold vs Available (Stacked Column Chart)
+        var dataInventory = new google.visualization.DataTable();
+        dataInventory.addColumn('string', 'Project');
+        dataInventory.addColumn('number', 'Sold');
+        dataInventory.addColumn('number', 'Available');
+        projectsInventory.forEach(function (row) {
+          dataInventory.addRow([row.project || 'Unknown', row.sold_plots || 0, row.available_plots || 0]);
+        });
+        new google.visualization.ColumnChart(document.getElementById('chart_projects_inventory')).draw(dataInventory, {
+          isStacked: true,
+          height: 350,
+          chartArea: { left: 60, top: 20, right: 20, bottom: 60 },
+          colors: ['#10b981', '#e5e7eb']
+        });
+
+      }).catch(function (err) {
+        console.error('Error loading analytics data', err);
+      });
+    }
+
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(drawCharts);
+  })();
+</script>
+
+{% endblock %}

@@ -1,0 +1,250 @@
+test_get_commission_calculator (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase) ... FAIL
+
+======================================================================
+FAIL: test_get_commission_calculator (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 138, in test_get_commission_calculator
+    self.assertEqual(response.status_code, 200)
+AssertionError: 302 != 200
+
+======================================================================
+FAIL: test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 250, in test_post_valid_commission
+    self.assertIsNotNone(row)
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 354, in test_post_with_ignored_agent_data
+    self.assertIsNotNone(row)
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.060s
+
+FAILED (failures=3)
+
+=== DEBUG RESPONSE DATA ===
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign in - Receipts</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background:#f6f7fb;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .login-card {
+      max-width:420px;
+      margin:6vh auto;
+      background:#fff;
+      padding:28px;
+      border-radius:10px;
+      box-shadow:0 8px 30px rgba(20,30,50,0.06);
+    }
+    .brand {
+      text-align:center;
+      margin-bottom:18px;
+    }
+    .brand img {
+      height:78px;
+    }
+    .form-title {
+      text-align:center;
+      font-weight:700;
+      color:#222;
+      margin-bottom:4px;
+      font-size:22px;
+    }
+    .muted {
+      color:#6b6b6b;
+      text-align:center;
+      margin-bottom:18px;
+      display:block;
+      font-size:14px;
+    }
+    .btn-brand {
+      background:#f16924 !important;
+      border-color:#f16924 !important;
+      color:#fff !important;
+      width:100%;
+      font-weight:600;
+    }
+    .btn-brand:hover {
+      background:#d85e1f !important;
+      border-color:#d85e1f !important;
+    }
+    .flash {
+      margin-bottom:14px;
+    }
+    .help {
+      margin-top:12px;
+      text-align:center;
+      color:#777;
+      font-size:13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-card">
+
+    <div class="brand">
+      <!-- Correct static logo path -->
+      <img src="/static/images/logo.png" alt="Logo">
+    </div>
+
+    <div class="form-title">Sign in</div>
+    <div class="muted">Access the Receipt Manager</div>
+
+    
+      
+    
+
+    <form method="POST" action="/login">
+      <input type="hidden" name="next" value="http://localhost/commission_calculator">
+
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input name="username" class="form-control" required autocomplete="username">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input name="password" type="password" class="form-control" required autocomplete="current-password">
+      </div>
+
+      <button class="btn btn-brand" type="submit">Sign in</button>
+    </form>
+
+    <div class="help">
+      Default login → <strong>admin / password123</strong>
+    </div>
+
+  </div>
+
+</body>
+</html>
+===========================
+
+
+=== DEBUG RESPONSE DATA (Agent) ===
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign in - Receipts</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background:#f6f7fb;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    .login-card {
+      max-width:420px;
+      margin:6vh auto;
+      background:#fff;
+      padding:28px;
+      border-radius:10px;
+      box-shadow:0 8px 30px rgba(20,30,50,0.06);
+    }
+    .brand {
+      text-align:center;
+      margin-bottom:18px;
+    }
+    .brand img {
+      height:78px;
+    }
+    .form-title {
+      text-align:center;
+      font-weight:700;
+      color:#222;
+      margin-bottom:4px;
+      font-size:22px;
+    }
+    .muted {
+      color:#6b6b6b;
+      text-align:center;
+      margin-bottom:18px;
+      display:block;
+      font-size:14px;
+    }
+    .btn-brand {
+      background:#f16924 !important;
+      border-color:#f16924 !important;
+      color:#fff !important;
+      width:100%;
+      font-weight:600;
+    }
+    .btn-brand:hover {
+      background:#d85e1f !important;
+      border-color:#d85e1f !important;
+    }
+    .flash {
+      margin-bottom:14px;
+    }
+    .help {
+      margin-top:12px;
+      text-align:center;
+      color:#777;
+      font-size:13px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-card">
+
+    <div class="brand">
+      <!-- Correct static logo path -->
+      <img src="/static/images/logo.png" alt="Logo">
+    </div>
+
+    <div class="form-title">Sign in</div>
+    <div class="muted">Access the Receipt Manager</div>
+
+    
+      
+    
+
+    <form method="POST" action="/login">
+      <input type="hidden" name="next" value="http://localhost/commission_calculator">
+
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input name="username" class="form-control" required autocomplete="username">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input name="password" type="password" class="form-control" required autocomplete="current-password">
+      </div>
+
+      <button class="btn btn-brand" type="submit">Sign in</button>
+    </form>
+
+    <div class="help">
+      Default login → <strong>admin / password123</strong>
+    </div>
+
+  </div>
+
+</body>
+</html>
+===========================
+

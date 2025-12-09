@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --brand-primary: #f16924;
+    --brand-secondary: #d85e1f;
+    --brand-light: #fff5f0;
+  }
+
+  .dashboard-page {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+  }
+
+  /* Header Section */
+  .page-header {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+  }
+
+  .page-subtitle {
+    color: #6c757d;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .project-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .filter-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .form-select {
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 0.625rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .form-select:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 0.2rem rgba(241, 105, 36, 0.15);
+  }
+
+  /* Section Headers */
+  .section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid var(--brand-primary);
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0;
+  }
+
+  /* Card Styling */
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.75rem;
+    height: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    text-decoration: none;
+    display: block;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: var(--brand-primary);
+    text-decoration: none;
+  }
+
+  .card-header-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f8f9fa;
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  .card-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+  }
+
+  .card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-value {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #212529;
+    margin-bottom: 0.75rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  .card-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  /* Color Variants */
+  .card-blue .card-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+
+  .card-blue .card-badge {
+    background: #eff6ff;
+    color: #1e40af;
+  }
+
+  .card-orange .card-icon {
+    background: linear-gradient(135deg, #f16924 0%, #d85e1f 100%);
+  }
+
+  .card-orange .card-badge {
+    background: #fff5f0;
+    color: #c2410c;
+  }
+
+  .card-green .card-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+
+  .card-green .card-badge {
+    background: #ecfdf5;
+    color: #065f46;
+  }
+
+  .card-purple .card-icon {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  }
+
+  .card-purple .card-badge {
+    background: #f5f3ff;
+    color: #6d28d9;
+  }
+
+  .card-pink .card-icon {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+  }
+
+  .card-pink .card-badge {
+    background: #fdf2f8;
+    color: #9f1239;
+  }
+
+  .card-teal .card-icon {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  }
+
+  .card-teal .card-badge {
+    background: #f0fdfa;
+    color: #115e59;
+  }
+
+  /* Action Cards */
+  .action-card {
+    cursor: pointer;
+  }
+
+  .action-card .card-title {
+    color: #212529;
+    transition: color 0.3s;
+  }
+
+  .action-card:hover .card-title {
+    color: var(--brand-primary);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 1.5rem;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .project-filter-wrapper {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+    }
+
+    .card-value {
+      font-size: 1.75rem;
+    }
+  }
+</style>
+
+<div class="dashboard-page">
+  <div class="container">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">
+            {% if selected_project %}
+            {{ selected_project }} Project Overview
+            {% else %}
+            All Projects Overview
+            {% endif %}
+          </p>
+        </div>
+        <div class="col-lg-6">
+          <form method="get" action="{{ url_for('dashboard') }}" class="project-filter-wrapper justify-content-lg-end">
+            <label for="projectFilter" class="filter-label">Filter by Project:</label>
+            <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
+              style="max-width: 280px;">
+              <option value="">All Projects</option>
+              {% for proj in projects %}
+              <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Management Snippets Section -->
+    <div class="mb-5">
+      <div class="section-header">
+        <h2 class="section-title">Management Snippets</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('account_summary', project=selected_project) if selected_project else url_for('account_summary') }}"
+            class="stat-card action-card card-green">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-currency-dollar"></i>
+              </div>
+              <span class="card-badge">Financial</span>
+            </div>
+            <h3 class="card-title">Account Summary</h3>
+            <p class="card-description">View comprehensive financial metrics, revenue analysis, and payment tracking
+              across all plots</p>
+          </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('plot_management') }}" class="stat-card action-card card-blue">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-grid-3x3-gap"></i>
+              </div>
+              <span class="card-badge">Settings</span>
+            </div>
+            <h3 class="card-title">Plot Management</h3>
+            <p class="card-description">Configure total plots and landowner allocations for each project</p>
+          </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('layout_management') }}" class="stat-card action-card card-teal">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-gear-wide-connected"></i>
+              </div>
+              <span class="card-badge">Settings</span>
+            </div>
+            <h3 class="card-title">Layout Management</h3>
+            <p class="card-description">Create, update, and manage project layouts dynamically across the application
+            </p>
+          </a>
+        </div>
+
+        {% if session.get('role') == 'admin' %}
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('user_management') }}" class="stat-card action-card card-orange">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-people"></i>
+              </div>
+              <span class="card-badge">Users</span>
+            </div>
+            <h3 class="card-title">User Management</h3>
+            <p class="card-description">Create and manage subordinate logins, roles, and dashboard access.</p>
+          </a>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('pending_receipts') }}" class="stat-card action-card card-orange"
+            style="position:relative;">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-hourglass-split"></i>
+              </div>
+              <span class="card-badge">Approvals</span>
+              {% if pending_count > 0 %}
+              <span
+                style="position:absolute; top:12px; right:12px; background:#ef4444; color:white; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; box-shadow:0 2px 8px rgba(239,68,68,0.4);">
+                {{ pending_count }} New
+              </span>
+              {% endif %}
+            </div>
+            <h3 class="card-title">Pending Receipts</h3>
+            <p class="card-description">Review and approve receipts submitted by users awaiting verification.</p>
+          </a>
+        </div>
+        {% endif %}
+
+        <div class="col-lg-4 col-md-6">
+          <a href="{{ url_for('create_receipts_options') }}" class="stat-card action-card card-pink">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-receipt"></i>
+              </div>
+              <span class="card-badge">Create</span>
+            </div>
+            <h3 class="card-title">Create Receipts</h3>
+            <p class="card-description">Generate new receipts or import from Excel</p>
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Plots Summary Section -->
+    <div class="mb-5">
+      <div class="section-header">
+        <h2 class="section-title">Plots Summary</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card card-blue">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-grid-3x3-gap"></i>
+              </div>
+              <span class="card-badge">Inventory</span>
+            </div>
+            <h3 class="card-title">Total Plots</h3>
+            <div class="card-value">{{ total_plots }}</div>
+            <p class="card-description">Total available plots in the project inventory</p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <a href="{{ url_for('plots_list', project=selected_project) if selected_project else url_for('plots_list') }}"
+            class="stat-card action-card card-orange">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-check-circle"></i>
+              </div>
+              <span class="card-badge">Sales</span>
+            </div>
+            <h3 class="card-title">Plots Sold</h3>
+            <div class="card-value">{{ num_plots }}</div>
+            <p class="card-description">Successfully sold and registered plots</p>
+          </a>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card card-teal">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-hourglass-split"></i>
+              </div>
+              <span class="card-badge">Available</span>
+            </div>
+            <h3 class="card-title">Plots Available</h3>
+            <div class="card-value">{{ plots_remaining }}</div>
+            <p class="card-description">Plots yet to be sold or reserved</p>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card card-purple">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-people"></i>
+              </div>
+              <span class="card-badge">Allocated</span>
+            </div>
+            <h3 class="card-title">Plots allocated to Landowners</h3>
+            <div class="card-value">{{ plots_to_landowners }}</div>
+            <p class="card-description">Plots assigned to landowners</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commission Management Section -->
+    <div class="mb-5">
+      <div class="section-header">
+        <h2 class="section-title">Commission Management</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6 col-md-6">
+          <a href="{{ url_for('commission_calculator') }}" class="stat-card action-card card-purple">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-calculator"></i>
+              </div>
+              <span class="card-badge">Calculate</span>
+            </div>
+            <h3 class="card-title">Calculate Commission</h3>
+            <p class="card-description">Create new commission calculations with detailed breakdowns for agents and
+              managers</p>
+          </a>
+        </div>
+
+        <div class="col-lg-6 col-md-6">
+          <a href="{{ url_for('view_commissions') }}" class="stat-card action-card card-teal">
+            <div class="card-header-section">
+              <div class="card-icon">
+                <i class="bi bi-grid"></i>
+              </div>
+              <span class="card-badge">View & Search</span>
+            </div>
+            <h3 class="card-title">View Commissions</h3>
+            <p class="card-description">Browse and search commissions by project, plot number, or view all commission
+              records</p>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Layouts & Performance Row -->
+    <div class="row g-4 mb-5">
+
+      <!-- Project Layouts Section -->
+      {% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}
+      <div class="col-lg-6">
+        <div class="section-header">
+          <h2 class="section-title">Project Layouts</h2>
+        </div>
+        <div class="row g-4">
+          {% if selected_project %}
+          <!-- Show only the selected project's layout -->
+          {% if selected_project == 'Vishvam' and (session.get('role') == 'admin' or
+          session.get('can_view_vishvam_layout')) %}
+          <div class="col-12">
+            <a href="{{ url_for('plot_layout_viewer', project_name='Vishvam') }}"
+              class="stat-card action-card card-blue">
+              <div class="card-header-section">
+                <div class="card-icon">
+                  <i class="bi bi-map"></i>
+                </div>
+                <span class="card-badge">Interactive</span>
+              </div>
+              <h3 class="card-title">Vishvam Layout</h3>
+              <p class="card-description">View interactive plot layout with real-time availability status</p>
+            </a>
+          </div>
+          {% endif %}
+          {# Add more project layouts here as they become available #}
+          {% else %}
+          <!-- Show all available project layouts when "All Projects" is selected -->
+          {% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}
+          <div class="col-12">
+            <a href="{{ url_for('plot_layout_viewer', project_name='Vishvam') }}"
+              class="stat-card action-card card-blue">
+              <div class="card-header-section">
+                <div class="card-icon">
+                  <i class="bi bi-map"></i>
+                </div>
+                <span class="card-badge">Interactive</span>
+              </div>
+              <h3 class="card-title">Vishvam Layout</h3>
+              <p class="card-description">View interactive plot layout with real-time availability status</p>
+            </a>
+          </div>
+          {% endif %}
+          {# Add more project layouts here as they become available #}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Mediator Performance Section -->
+      <div
+        class="{% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}col-lg-6{% else %}col-12{% endif %}">
+        <div class="section-header">
+          <h2 class="section-title">Mediator Performance</h2>
+        </div>
+        <div class="row g-4">
+          <div class="col-12">
+            <a href="{{ url_for('mediator_performance', project=selected_project) if selected_project else url_for('mediator_performance') }}"
+              class="stat-card card-teal action-card" style="text-decoration: none;">
+              <div class="card-header-section">
+                <div class="card-icon">
+                  <i class="bi bi-trophy"></i>
+                </div>
+                <span class="card-badge">Performance</span>
+              </div>
+              <h3 class="card-title">Mediator Performance</h3>
+              <p class="card-description mb-0">
+                View top performing CGMs by plots sold, square yards, and total earnings. Track individual and team
+                performance metrics.
+              </p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+{% endblock %}

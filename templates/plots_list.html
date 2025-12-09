@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --brand-primary: #f16924;
+        --brand-secondary: #d85e1f;
+    }
+
+    .page-wrapper {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .breadcrumb-text {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    .breadcrumb-text a {
+        color: var(--brand-primary);
+        text-decoration: none;
+    }
+
+    .breadcrumb-text a:hover {
+        text-decoration: underline;
+    }
+
+    .btn-back {
+        background: var(--brand-primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .btn-back:hover {
+        background: var(--brand-secondary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(241, 105, 36, 0.3);
+    }
+
+    .plots-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .plot-count {
+        color: #6c757d;
+        font-size: 0.95rem;
+    }
+
+    .plots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .plot-badge {
+        background: white;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 700;
+        color: #495057;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s;
+        font-size: 1rem;
+    }
+
+    .plot-badge:hover {
+        background: var(--brand-primary);
+        border-color: var(--brand-primary);
+        color: white;
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(241, 105, 36, 0.3);
+        text-decoration: none;
+    }
+
+    .plot-project-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        display: block;
+    }
+
+    .plot-badge:hover .plot-project-label {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .plots-grid {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mb-3 mb-lg-0">
+                    <h1 class="page-title">Sold Plots</h1>
+                    <div class="breadcrumb-text">
+                        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                        <span class="mx-2">›</span>
+                        <span>
+                            {% if selected_project %}
+                            {{ selected_project }} Plots
+                            {% else %}
+                            All Plots
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('dashboard', project=selected_project) if selected_project else url_for('dashboard') }}"
+                        class="btn-back">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plots Container -->
+        <div class="plots-container">
+            <!-- Search Form -->
+            <div class="mb-4 p-3" style="background: #f8f9fa; border-radius: 8px;">
+                <form method="get" action="{{ url_for('plots_list') }}" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="projectSelect" class="form-label fw-bold">
+                            <i class="bi bi-building me-2"></i>Project
+                        </label>
+                        <select class="form-select" id="projectSelect" name="project">
+                            <option value="">All Projects</option>
+                            {% for proj in projects %}
+                            <option value="{{ proj }}" {% if proj==selected_project %}selected{% endif %}>{{ proj }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="plotSearch" class="form-label fw-bold">
+                            <i class="bi bi-search me-2"></i>Plot Number
+                        </label>
+                        <input type="text" class="form-control" id="plotSearch" name="search_plot"
+                            value="{{ search_plot or '' }}" placeholder="Enter plot number...">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-2"></i>Search
+                        </button>
+                    </div>
+                </form>
+                {% if search_plot or selected_project %}
+                <div class="mt-2">
+                    <a href="{{ url_for('plots_list') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <h2 class="section-title">
+                    {% if selected_project %}
+                    {{ selected_project }} - Plot Numbers
+                    {% else %}
+                    All Plot Numbers
+                    {% endif %}
+                </h2>
+                <p class="plot-count">{{ plots|length }} plot(s) found</p>
+            </div>
+
+            {% if plots %}
+            <div class="plots-grid">
+                {% for p in plots %}
+                {% if selected_project %}
+                <a href="{{ url_for('plot_detail', project_name=selected_project, plot_no=p) }}" class="plot-badge">
+                    {{ p }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('plot_detail', project_name=p.project, plot_no=p.plot) }}" class="plot-badge">
+                    {{ p.plot }}
+                    <span class="plot-project-label">{{ p.project }}</span>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <p class="fs-5">No plots found{% if selected_project %} for {{ selected_project }}{% endif %}</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

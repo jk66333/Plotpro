@@ -1,0 +1,52 @@
+test_get_commission_calculator (test_commission_calculator.CommissionCalculatorTestCase) ... ok
+test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase) ... [2025-12-07 16:32:23,135] ERROR in receipt_app: Error generating commission PDF
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/receipt_app.py", line 2612, in commission_calculator
+    commission_id = save_commission_to_db(form_data, calculations)
+  File "/Users/admin/receipt_app_project_autogravity_ws/receipt_app.py", line 3313, in save_commission_to_db
+    c.execute("""
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 161, in execute
+    return self.cursor.execute(query, params)
+sqlite3.OperationalError: 42 values for 41 columns
+FAIL
+test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase) ... [2025-12-07 16:32:23,184] ERROR in receipt_app: Error generating commission PDF
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/receipt_app.py", line 2612, in commission_calculator
+    commission_id = save_commission_to_db(form_data, calculations)
+  File "/Users/admin/receipt_app_project_autogravity_ws/receipt_app.py", line 3313, in save_commission_to_db
+    c.execute("""
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 278, in execute
+    return self.cursor.execute(query, params)
+sqlite3.OperationalError: 42 values for 41 columns
+FAIL
+
+======================================================================
+FAIL: test_post_valid_commission (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 241, in test_post_valid_commission
+    self.assertEqual(response.status_code, 200)
+AssertionError: 500 != 200
+
+======================================================================
+FAIL: test_post_with_ignored_agent_data (test_commission_calculator.CommissionCalculatorTestCase)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/admin/receipt_app_project_autogravity_ws/test_commission_calculator.py", line 346, in test_post_with_ignored_agent_data
+    self.assertEqual(response.status_code, 200)
+AssertionError: 500 != 200
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.510s
+
+FAILED (failures=2)
+Projects table exists: True
+Projects count: (3,)
+Sample data: [(1, 'Vishvam', 628, 375, 0, 0), (2, 'Srinidhi', 0, 0, 0, 0), (3, 'Prakruthi', 0, 0, 0, 0)]
+Rows with 'name' column: [{'name': 'Prakruthi'}, {'name': 'Srinidhi'}, {'name': 'Vishvam'}]
+
+=== DEBUG 500 ERROR ===
+{"error":"Error generating PDF: 42 values for 41 columns","success":false}
+
+=======================
+

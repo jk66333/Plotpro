@@ -1,0 +1,13 @@
+flask
+num2words
+playwright
+pandas
+openpyxl
+reportlab
+python-docx
+mysql-connector-python
+python-dotenv
+cryptography
+requests
+# After installing these packages, run:
+# python -m playwright install chromium

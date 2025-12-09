@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .details-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+    }
+
+    .mediator-info h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+    }
+
+    .role-cgm {
+        background-color: var(--brand-primary);
+    }
+
+    .role-srgm {
+        background-color: #10b981;
+    }
+
+    .role-gm {
+        background-color: #3b82f6;
+    }
+
+    .role-agent {
+        background-color: #8b5cf6;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+    .stat-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .plots-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .plots-table th {
+        background: #f8fafc;
+        padding: 12px 16px;
+        font-weight: 600;
+        color: #475569;
+        text-align: left;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .plots-table td {
+        padding: 16px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+
+    .plots-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .earnings-value {
+        font-family: 'Roboto Mono', monospace;
+        font-weight: 600;
+        color: #059669;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="header-section">
+        <div class="mediator-info">
+            <h1>{{ name }}</h1>
+            <span class="role-badge 
+                {% if role == 'CGM' %}role-cgm
+                {% elif role == 'Sr.GM' %}role-srgm
+                {% elif role == 'GM' %}role-gm
+                {% else %}role-agent{% endif %}">
+                {{ role }}
+            </span>
+        </div>
+        <a href="{{ url_for('mediator_performance', project=selected_project, month=selected_month) }}"
+            class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Performance
+        </a>
+    </div>
+
+    <div class="summary-grid">
+        <div class="stat-box">
+            <div class="stat-label">Team (CGM)</div>
+            <div class="stat-value">{{ cgm_team }}</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Plots Sold</div>
+            <div class="stat-value">{{ details|length }}</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Sq. Yards</div>
+            <div class="stat-value">{{ "{:,.2f}".format(total_sq_yards) }}</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Total Earnings</div>
+            <div class="stat-value" style="color: #059669;">₹{{ "{:,.2f}".format(total_earnings) }}</div>
+        </div>
+    </div>
+
+    <div class="details-card">
+        <h3 class="mb-4">Performance Breakdown</h3>
+        {% if details %}
+        <div class="table-responsive">
+            <table class="plots-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Project</th>
+                        <th>Plot No</th>
+                        <th>Sq. Yards</th>
+                        <th>Team Lead (CGM)</th>
+                        <th class="text-end">Earnings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in details %}
+                    <tr>
+                        <td>{{ item.date.strftime('%Y-%m-%d') if item.date else 'N/A' }}</td>
+                        <td>{{ item.project_name }}</td>
+                        <td><strong>{{ item.plot_no }}</strong></td>
+                        <td>{{ "{:,.2f}".format(item.sq_yards) }}</td>
+                        <td>{{ item.team_lead }}</td>
+                        <td class="text-end earnings-value">₹{{ "{:,.2f}".format(item.earnings) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+            <p class="text-muted">No performance records found for the selected criteria.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

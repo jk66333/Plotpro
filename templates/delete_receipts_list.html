@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .page-wrapper {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .title-section h2 {
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 300px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    .search-control {
+        padding-left: 40px;
+        padding-right: 20px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        border-radius: 30px;
+        border: 1px solid #dee2e6;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .search-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
+        border-color: #dc3545;
+    }
+
+    .plot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .plot-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: inherit;
+        overflow: hidden;
+        display: block;
+        position: relative;
+    }
+
+    .plot-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        border-color: #dc3545;
+    }
+
+    .card-header-bar {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        font-weight: 700;
+        color: #495057;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-body-content {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .receipt-count {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #dc3545;
+    }
+
+    .receipt-label {
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+
+    .btn-back {
+        background: white;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        margin-right: 1rem;
+    }
+
+    .btn-back:hover {
+        background: #f8f9fa;
+        color: #495057;
+    }
+
+    .plot-check-wrapper {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 10;
+        transform: scale(1.2);
+    }
+
+    .plot-delete-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 10;
+        background: #fee2e2;
+        color: #dc3545;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        opacity: 0;
+    }
+
+    .plot-card:hover .plot-delete-btn {
+        opacity: 1;
+    }
+
+    .plot-delete-btn:hover {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="container container-custom">
+        <form id="bulkDeleteForm" action="{{ url_for('bulk_delete_plots') }}" method="POST">
+            <!-- Header -->
+            <div class="page-header">
+                <div class="title-section">
+                    <h2>Delete Receipts</h2>
+                    <p class="text-muted mb-0">Select plots to delete all their receipts</p>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="deleteSelectedBtn" class="btn btn-danger" disabled
+                        onclick="confirmBulkDelete()">
+                        <i class="bi bi-trash me-2"></i>Delete Selected (<span id="selectedCount">0</span>)
+                    </button>
+                    <a href="{{ url_for('create_receipts_options') }}" class="btn-back">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="plotSearch" class="search-control" placeholder="Search Plot Number...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plots Grid -->
+            <div class="plot-grid" id="plotsContainer">
+                {% for p in plots %}
+                <div class="plot-card-wrapper position-relative" data-plot="{{ p.plot_no }}">
+                    <!-- Checkbox -->
+                    <div class="plot-check-wrapper">
+                        <input type="checkbox" name="plot_data" value="{{ p.plot_no }}|{{ p.project_name }}"
+                            class="form-check-input plot-check">
+                    </div>
+
+                    <!-- Delete Button -->
+                    <button type="button" class="plot-delete-btn"
+                        onclick="deleteSinglePlot('{{ p.plot_no }}', '{{ p.project_name }}')"
+                        title="Delete all receipts for this plot">
+                        <i class="bi bi-trash"></i>
+                    </button>
+
+                    <!-- Main Card Link -->
+                    <a href="{{ url_for('delete_receipts_detail', plot_no=p.plot_no) }}?project_name={{ p.project_name }}"
+                        class="plot-card">
+                        <div class="card-header-bar ps-4">
+                            <!-- Padding left to avoid overlapping checkbox -->
+                            <span>Plot {{ p.plot_no }}</span>
+                            {% if p.project_name %}
+                            <span class="badge bg-light text-secondary border">{{ p.project_name }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body-content">
+                            <div class="receipt-count">{{ p.receipt_count }}</div>
+                            <div class="receipt-label">Receipts</div>
+                        </div>
+                    </a>
+                </div>
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="text-muted">No receipts found</h4>
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Delete Modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete ALL receipts for <strong id="modalCount"></strong> plot(s)?</p>
+                <p class="text-danger fw-bold mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onclick="submitBulkDelete()" class="btn btn-danger">Yes, Delete All</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Single Delete Form -->
+<form id="singleDeleteForm" action="{{ url_for('bulk_delete_plots') }}" method="POST">
+    <input type="hidden" name="plot_data" id="singleDeleteData">
+</form>
+
+<script>
+    const checks = document.querySelectorAll('.plot-check');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    const countSpan = document.getElementById('selectedCount');
+
+    // Search
+    document.getElementById('plotSearch').addEventListener('keyup', function () {
+        const searchTerm = this.value.toLowerCase();
+        const cards = document.querySelectorAll('.plot-card-wrapper');
+
+        cards.forEach(card => {
+            const plotNo = card.getAttribute('data-plot').toLowerCase();
+            if (plotNo.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // Checkbox Logic
+    checks.forEach(check => {
+        check.addEventListener('change', updateUI);
+        // Stop propagation to prevent clicking the card link when checking box
+        check.addEventListener('click', e => e.stopPropagation());
+    });
+
+    function updateUI() {
+        const checked = document.querySelectorAll('.plot-check:checked');
+        const count = checked.length;
+        countSpan.textContent = count;
+        deleteBtn.disabled = count === 0;
+    }
+
+    function deleteSinglePlot(plotNo, projectName) {
+        event.preventDefault(); // Stop link
+        event.stopPropagation();
+        if (confirm(`Are you sure you want to delete all receipts for Plot ${plotNo}?`)) {
+            const val = `${plotNo}|${projectName}`;
+            document.getElementById('singleDeleteData').value = val;
+            document.getElementById('singleDeleteForm').submit();
+        }
+    }
+
+    function confirmBulkDelete() {
+        const count = document.querySelectorAll('.plot-check:checked').length;
+        document.getElementById('modalCount').textContent = count;
+        new bootstrap.Modal(document.getElementById('bulkDeleteModal')).show();
+    }
+
+    function submitBulkDelete() {
+        document.getElementById('bulkDeleteForm').submit();
+    }
+</script>
+
+{% endblock %}

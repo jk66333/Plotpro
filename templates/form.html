@@ -1,0 +1,670 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- brand button styles (kept local to this template) -->
+<style>
+  .btn-blank {
+    background: #f16924 !important;
+    border-color: #f16924 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+  }
+
+  .btn-blank:hover,
+  .btn-blank:focus {
+    background: #d85e1f !important;
+    border-color: #d85e1f !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    box-shadow: none;
+  }
+
+  .btn-blank {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+
+  .btn-danger {
+    background: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+  }
+
+  .btn-danger:hover,
+  .btn-danger:focus {
+    background: #c82333 !important;
+    border-color: #c82333 !important;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    box-shadow: none;
+  }
+
+  .form-page {
+    padding: 28px 12px;
+    max-width: 980px;
+    margin: 18px auto;
+  }
+
+  .form-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(20, 30, 50, 0.06);
+  }
+
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .form-title {
+    margin: 0;
+    font-size: 20px;
+    color: #222;
+    font-weight: 700;
+  }
+
+  .form-sub {
+    margin: 0;
+    color: #666;
+    font-size: 13px;
+  }
+
+  .grid-1,
+  .grid-2 {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .grid-2>.input-group {
+    flex: 1 1 48%;
+  }
+
+  .grid-1>.input-group {
+    flex: 1 1 100%;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+    min-width: 0;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #e6e6e6;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+
+  .input.monospace {
+    font-family: monospace;
+  }
+
+  .hint {
+    color: #666;
+    font-size: 12px;
+    margin-top: 6px;
+    display: block;
+  }
+
+  .form-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn.primary {
+    background: #0b5ed7;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+  }
+
+  .btn.secondary {
+    background: #f0f0f0;
+    color: #222;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
+  .recent-card {
+    margin-top: 16px;
+    background: #fafafa;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .recent-title {
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .recent-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .recent-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .recent-list li a {
+    color: #1b6ec2;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .autofill-status {
+    font-size: 13px;
+    color: #1b6ec2;
+    margin-top: 6px;
+  }
+
+  @media (max-width:720px) {
+    .grid-2>.input-group {
+      flex: 1 1 100%;
+    }
+  }
+</style>
+
+<div class="form-page">
+  <div class="form-card">
+
+    <div class="form-header">
+      <div>
+        <h2 class="form-title">{{ "Edit Receipt" if edit_mode else "Create New Receipt" }}</h2>
+        <div class="form-sub">Fill the fields below and click <strong>Save & Preview Receipt</strong>.</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;color:#666">Recent <br><strong style="font-size:16px;color:#111">{{ recent|length
+            }}</strong></div>
+        {% if edit_mode and r %}
+        <div style="font-size:12px;color:#999;margin-top:6px">Editing #{{ r.id }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <form id="receiptForm" method="post"
+      action="{{ url_for('update_receipt', receipt_id=r.id) if edit_mode else url_for('create') }}">
+
+      <!-- Row: Receipt No + Date -->
+      <div class="grid-2">
+        <div class="input-group">
+          <label>Receipt No</label>
+          <input name="no" class="input" autocomplete="off" value="{{ r.no if r else '' }}">
+        </div>
+
+        <div class="input-group">
+          <label>Date</label>
+          <input type="date" name="date" class="input" autocomplete="off" value="{{ r.date if r else '' }}">
+        </div>
+      </div>
+
+      <!-- Row: Project + Venture -->
+      <div class="grid-2">
+        <div class="input-group">
+          <label>Project Name</label>
+          <select name="project_name" class="input" id="projectSelect">
+            <option value="">Select Project</option>
+            {% for p in projects %}
+            <option value="{{ p }}" {% if r and r.project_name==p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Venture</label>
+          <input name="venture" class="input" autocomplete="off" value="{{ r.venture if r else '' }}">
+        </div>
+      </div>
+
+      <!-- PLOT NO -->
+      <div class="grid-1" style="margin-top:8px;">
+        <div class="input-group">
+          <label>Plot No</label>
+          <input name="plot_no" id="plotNo" class="input" autocomplete="off" value="{{ r.plot_no if r else '' }}"
+            placeholder="Plot number">
+          <div id="autofillStatus" class="autofill-status"></div>
+        </div>
+      </div>
+
+      <!-- Customer Name -->
+      <div class="grid-1" style="margin-top:8px;">
+        <div class="input-group">
+          <label>Customer Name</label>
+          <input name="customer_name" id="customerName" class="input" autocomplete="off"
+            value="{{ r.customer_name if r else '' }}" placeholder="Sri / Mr / Ms">
+        </div>
+      </div>
+
+      <!-- PAN + Aadhar -->
+      <div class="grid-2 id-fields" style="margin-top:6px;">
+        <div class="input-group">
+          <label>PAN No.</label>
+          <input name="pan_no" id="panNo" class="input" autocomplete="off" value="{{ r.pan_no if r else '' }}"
+            maxlength="10" placeholder="ABCDE1234F" inputmode="text">
+        </div>
+
+        <div class="input-group">
+          <label>Aadhar No.</label>
+          <input name="aadhar_no" id="aadharNo" class="input" autocomplete="off" value="{{ r.aadhar_no if r else '' }}"
+            maxlength="14" placeholder="1234 5678 9012" inputmode="numeric">
+        </div>
+      </div>
+
+      <!-- Basic Price (per Sq.Yd) -->
+      <div class="grid-1" style="margin-top:8px;">
+        <div class="input-group">
+          <label>Basic Price (per Sq.Yard)</label>
+          <input name="basic_price" id="basicPrice" class="input monospace" autocomplete="off"
+            value="{{ r.basic_price if r and r.basic_price is not none else '' }}" placeholder="e.g. 4000">
+          <small class="hint">Auto-filled if already provided for this plot.</small>
+        </div>
+      </div>
+
+      <!-- Amount + Words -->
+      <div class="grid-2" style="margin-top:6px;">
+        <div class="input-group">
+          <label>Amount (₹)</label>
+          <input id="amountInput" name="amount_numeric" autocomplete="off" class="input monospace"
+            value="{{ r.amount_numeric if r else '' }}" placeholder="e.g. 13331250.50">
+          <small class="hint">Type numbers; we format visually as you type.</small>
+        </div>
+
+        <div class="input-group">
+          <label>Amount (in words)</label>
+          <input id="amountWords" name="amount_words" autocomplete="off" class="input"
+            value="{{ r.amount_words if r else '' }}" placeholder="Thirteen Crore ...">
+        </div>
+      </div>
+
+      <!-- Payment Mode + Square Yards -->
+      <div class="grid-2" style="margin-top:6px;">
+        <div class="input-group">
+          <label>Payment Mode</label>
+          <select name="payment_mode" id="paymentMode" class="input">
+            <option value="">Select</option>
+            <option value="Cash" {% if r and r.payment_mode=='Cash' %}selected{% endif %}>Cash</option>
+            <option value="Cheque" {% if r and r.payment_mode=='Cheque' %}selected{% endif %}>Cheque</option>
+            <option value="Online Transfer" {% if r and r.payment_mode=='Online Transfer' %}selected{% endif %}>Online
+              Transfer</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Square Yards</label>
+          <input name="square_yards" id="squareYards" class="input" value="{{ r.square_yards if r else '' }}">
+        </div>
+      </div>
+
+      <!-- Extra Instrument Field -->
+      <div id="instrumentField" style="display:none; margin-top:12px;">
+        <div class="input-group">
+          <label id="instrumentLabel">Instrument Number</label>
+          <input name="instrument_no" id="instrumentNo" class="input" autocomplete="off"
+            value="{{ r.instrument_no if r and r.instrument_no is not none else '' }}">
+        </div>
+      </div>
+
+      <!-- Purpose + Bank -->
+      <div class="grid-2" style="margin-top:8px;">
+        <div class="input-group">
+          <label>Purpose</label>
+          <input name="purpose" class="input" value="{{ r.purpose if r else '' }}">
+        </div>
+
+        <div class="input-group">
+          <label>Drawn Bank</label>
+          <input name="drawn_bank" class="input" value="{{ r.drawn_bank if r else '' }}">
+        </div>
+      </div>
+
+      <!-- Branch -->
+      <div class="grid-1" style="margin-top:6px;">
+        <div class="input-group">
+          <label>Branch</label>
+          <input name="branch" class="input" value="{{ r.branch if r else '' }}">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button type="submit" class="btn primary">
+          {{ "Save Changes" if edit_mode else "Save & Preview Receipt" }}
+        </button>
+
+        {% if edit_mode %}
+        <a href="{{ url_for('view_receipt', receipt_id=r.id) }}" class="btn secondary">Cancel</a>
+        
+        {% if session.get('role') == 'admin' %}
+        <button type="button" class="btn danger" onclick="deleteReceipt({{ r.id }})">
+          <i class="bi bi-trash"></i> Delete Receipt
+        </button>
+        {% endif %}
+        {% endif %}
+
+        {% if session.get('role') == 'admin' or session.get('can_search_receipts') %}
+        <a href="{{ url_for('search_by_plot') }}" class="btn btn-blank">Search Receipts</a>
+        {% endif %}
+        <a href="{{ url_for('index') }}" class="btn btn-blank">New Blank</a>
+
+        {% if session.get('role') == 'admin' %}
+        <a href="{{ url_for('dashboard') }}" class="btn btn-blank">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if recent %}
+    <div class="recent-card">
+      <div class="recent-title">Recent Receipts</div>
+      <ul class="recent-list">
+        {% for row in recent %}
+        <li>
+          <a href="{{ url_for('view_receipt', receipt_id=row['id']) }}">
+            #{{ row['no'] or row['id'] }} — {{ row['customer_name'] or 'Customer' }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ==================== JS ==================== -->
+<script>
+  /* ---------- Disable autocomplete globally ---------- */
+  document.querySelectorAll("input").forEach(i => i.setAttribute("autocomplete", "off"));
+
+  /* ---------- INR formatting ---------- */
+  function formatIndian(x) {
+    if (!x) return '';
+    x = String(x).replace(/[^\d.]/g, '');
+    let parts = x.split('.');
+    let intPart = parts[0] || '';
+    let decPart = parts.length > 1 ? parts[1] : null;
+    if (!intPart) return '';
+    let last3 = intPart.slice(-3);
+    let rest = intPart.slice(0, -3);
+    let res = '';
+    if (rest) {
+      let groups = rest.match(/\d{1,2}(?=(\d{2})*$)/g) || [];
+      res = groups.join(',') + ',' + last3;
+    } else {
+      res = last3;
+    }
+    return decPart ? res + '.' + decPart : res;
+  }
+
+  /* ---------- Indian Number Words ---------- */
+  function numberToIndianWords(amount) {
+    if (amount === '' || amount === null || isNaN(Number(amount))) return '';
+    const n = Number(amount);
+    const integerPart = Math.floor(Math.abs(n));
+    let paise = Math.round((Math.abs(n) - integerPart) * 100);
+
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+      'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const word2 = (num) => num < 20 ? ones[num] : tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+    const word3 = (num) => {
+      const h = Math.floor(num / 100);
+      const r = num % 100;
+      return (h ? ones[h] + ' Hundred' + (r ? ' ' : '') : '') + (r ? word2(r) : '');
+    };
+
+    let crore = Math.floor(integerPart / 10000000);
+    let lakh = Math.floor((integerPart % 10000000) / 100000);
+    let thousand = Math.floor((integerPart % 100000) / 1000);
+    let last3 = integerPart % 1000;
+
+    let parts = [];
+    if (crore) parts.push((crore < 100 ? word2(crore) : word3(crore)) + ' Crore');
+    if (lakh) parts.push((lakh < 100 ? word2(lakh) : word3(lakh)) + ' Lakh');
+    if (thousand) parts.push((thousand < 100 ? word2(thousand) : word3(thousand)) + ' Thousand');
+    if (last3) parts.push(word3(last3));
+
+    let words = parts.join(' ').trim() || 'Zero';
+
+    if (paise) {
+      return words + ' and ' + (paise < 100 ? word2(paise) : word3(paise)) + ' Paise Only';
+    }
+    return words + ' Only';
+  }
+
+  /* ---------- Update words as user types ---------- */
+  const amountInputEl = document.getElementById("amountInput");
+  const amountWordsEl = document.getElementById("amountWords");
+  let amtTimer = null;
+
+  if (amountInputEl) {
+    amountInputEl.addEventListener('input', e => {
+      const raw = e.target.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+      e.target.value = formatIndian(raw);
+      clearTimeout(amtTimer);
+      amtTimer = setTimeout(() => {
+        amountWordsEl.value = numberToIndianWords(raw);
+      }, 300);
+    });
+
+    amountInputEl.addEventListener('blur', e => {
+      const raw = e.target.value.replace(/,/g, '');
+      e.target.value = formatIndian(raw);
+      amountWordsEl.value = numberToIndianWords(raw);
+    });
+  }
+
+  /* ---------- PAN / Aadhar validation ---------- */
+  const panInput = document.getElementById("panNo");
+  const aadharInput = document.getElementById("aadharNo");
+  const customerInput = document.getElementById("customerName");
+
+  /* ---------- Save validation ---------- */
+  document.getElementById('receiptForm').addEventListener('submit', ev => {
+    const rawAmt = (amountInputEl && amountInputEl.value) ? amountInputEl.value.replace(/,/g, '') : '';
+    if (!customerInput.value.trim()) { ev.preventDefault(); alert("Please enter Customer Name."); return; }
+    if (!rawAmt || isNaN(rawAmt)) { ev.preventDefault(); alert("Invalid amount"); return; }
+
+    if (panInput && panInput.value) {
+      panInput.value = panInput.value.toUpperCase();
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(panInput.value)) {
+        ev.preventDefault(); alert("Invalid PAN"); return;
+      }
+    }
+
+    if (aadharInput && aadharInput.value) {
+      let digits = aadharInput.value.replace(/\s+/g, '');
+      if (!/^\d{12}$/.test(digits)) { ev.preventDefault(); alert("Aadhar must be 12 digits"); return; }
+      aadharInput.value = digits;
+    }
+
+    // Ensure amount and basic price are submitted as raw (no commas)
+    if (amountInputEl) amountInputEl.value = rawAmt;
+    const basicEl = document.getElementById("basicPrice");
+    if (basicEl) basicEl.value = basicEl.value.replace(/,/g, '').trim();
+  });
+
+  /* ---------- Silent Autofill from plot_no (includes basic_price & PAN/Aadhar) ---------- */
+  let plotTimer = null;
+  const plotInput = document.getElementById("plotNo");
+  const squareYInput = document.getElementById("squareYards");
+  const autofillStatus = document.getElementById("autofillStatus");
+  const basicPriceInput = document.getElementById("basicPrice");
+  const projectSelect = document.getElementById("projectSelect");
+
+  async function fetchAndAutofill(plotVal) {
+    if (!plotVal) { autofillStatus.textContent = ""; return; }
+
+    const projectVal = projectSelect ? projectSelect.value : "";
+
+    // Require both plot number AND project name for unique lookup
+    if (!projectVal) {
+      autofillStatus.textContent = "Please select a project first.";
+      return;
+    }
+
+    autofillStatus.textContent = "Checking previous receipts...";
+
+    try {
+      let url = "/api/plot_lookup?plot_no=" + encodeURIComponent(plotVal);
+      url += "&project_name=" + encodeURIComponent(projectVal);
+
+      const resp = await fetch(url);
+      if (!resp.ok) { autofillStatus.textContent = ""; return; }
+      const data = await resp.json();
+      if (!data.found) {
+        autofillStatus.textContent = "No previous receipt found for this plot in " + projectVal + ".";
+        return;
+      }
+      autofillStatus.textContent = "Auto-filled from latest receipt in " + projectVal + ".";
+      if (data.customer_name) document.getElementById("customerName").value = data.customer_name || "";
+      if (data.pan_no && document.getElementById("panNo")) document.getElementById("panNo").value = data.pan_no || "";
+      if (data.aadhar_no && document.getElementById("aadharNo")) document.getElementById("aadharNo").value = data.aadhar_no || "";
+      if (data.square_yards && squareYInput) squareYInput.value = data.square_yards || "";
+      if (basicPriceInput) {
+        basicPriceInput.value = (data.basic_price !== null && data.basic_price !== undefined)
+          ? formatIndian(String(data.basic_price))
+          : (basicPriceInput.value || "");
+      }
+      if (data.amount_numeric !== undefined && amountInputEl) {
+        let num = String(data.amount_numeric || '');
+        amountInputEl.value = formatIndian(num);
+        amountWordsEl.value = numberToIndianWords(num);
+      }
+      if (data.payment_mode && document.querySelector('[name="payment_mode"]'))
+        document.querySelector('[name="payment_mode"]').value = data.payment_mode;
+      if (data.date && document.querySelector('[name="date"]'))
+        document.querySelector('[name="date"]').value = data.date;
+    } catch (err) {
+      console.error("Autofill error:", err);
+      autofillStatus.textContent = "";
+    }
+  }
+
+  // Re-trigger autofill when project changes
+  if (projectSelect && plotInput) {
+    projectSelect.addEventListener('change', () => {
+      if (plotInput.value && plotInput.value.trim()) {
+        fetchAndAutofill(plotInput.value.trim());
+      }
+    });
+  }
+
+  if (plotInput) {
+    plotInput.addEventListener('input', e => {
+      clearTimeout(plotTimer);
+      plotTimer = setTimeout(() => fetchAndAutofill(e.target.value.trim()), 300);
+    });
+    plotInput.addEventListener('blur', e => {
+      clearTimeout(plotTimer);
+      fetchAndAutofill(e.target.value.trim());
+    });
+
+    // run autofill on load if we are in edit mode and fields empty
+    if (plotInput.value && plotInput.value.trim()) {
+      const needPan = !(panInput && panInput.value.trim());
+      const needAadhar = !(aadharInput && aadharInput.value.trim());
+      const needBasic = !(basicPriceInput && basicPriceInput.value.trim());
+      const needSqYds = !(squareYInput && squareYInput.value.trim());
+      if (needPan || needAadhar || needBasic || needSqYds) {
+        fetchAndAutofill(plotInput.value.trim());
+      }
+    }
+  }
+
+  /* ----------------------------------------
+     Robust Instrument Field toggler
+     ---------------------------------------- */
+  (function () {
+    const paymentModeEl = document.getElementById("paymentMode");
+    const instrumentField = document.getElementById("instrumentField");
+    const instrumentLabel = document.getElementById("instrumentLabel");
+    const instrumentNo = document.getElementById("instrumentNo");
+    if (!paymentModeEl || !instrumentField || !instrumentLabel || !instrumentNo) return;
+
+    function showInstrument(show, labelText = "Instrument Number", placeholder = "") {
+      if (show) {
+        instrumentLabel.textContent = labelText;
+        instrumentNo.placeholder = placeholder;
+        instrumentField.style.display = "block";
+      } else {
+        instrumentField.style.display = "none";
+      }
+    }
+
+    function updateInstrumentField() {
+      const mode = (paymentModeEl.value || "").toLowerCase().trim();
+      if (mode === "cheque") {
+        showInstrument(true, "Cheque Number", "Enter cheque number");
+      } else if (
+        mode === "online transfer" ||
+        mode.includes("online") ||
+        mode.includes("transfer") ||
+        mode.includes("upi")
+      ) {
+        showInstrument(true, "UTR / Transaction ID", "Enter UTR or transaction/UPI ID");
+      } else {
+        showInstrument(false);
+      }
+    }
+
+    try { updateInstrumentField(); } catch (e) { console.error("Instrument field init error:", e); }
+    paymentModeEl.addEventListener("change", updateInstrumentField);
+  })();
+
+  /* ---------- Delete Receipt Function ---------- */
+  function deleteReceipt(receiptId) {
+    if (!confirm('Are you sure you want to delete this receipt? This action cannot be undone.')) {
+      return;
+    }
+    
+    fetch(`/receipt/${receiptId}/delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Receipt deleted successfully!');
+        window.location.href = '{{ url_for("dashboard") }}';
+      } else {
+        alert('Error: ' + (data.error || 'Failed to delete receipt'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while deleting the receipt');
+    });
+  }
+
+</script>
+
+{% endblock %}

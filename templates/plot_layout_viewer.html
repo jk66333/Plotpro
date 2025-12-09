@@ -1,0 +1,1426 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .layout-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+        padding: 20px;
+        height: calc(100vh - 100px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .layout-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .layout-controls {
+        display: flex;
+        gap: 12px;
+    }
+
+    .layout-viewer {
+        flex: 1;
+        background: #f8f9fa;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        cursor: grab;
+    }
+
+    .layout-viewer:active {
+        cursor: grabbing;
+    }
+
+    /* SVG Styles */
+    svg {
+        width: 100%;
+        height: 100%;
+        transition: transform 0.1s ease;
+    }
+
+    .plot-shape {
+        cursor: pointer !important;
+        transition: all 0.2s ease;
+        stroke: #666;
+        stroke-width: 2px;
+        /* Thicker default stroke */
+        pointer-events: all;
+        /* Ensure events are captured */
+        fill: transparent;
+        /* Capture clicks inside shapes */
+    }
+
+    .plot-shape:hover {
+        stroke: #000;
+        stroke-width: 5px;
+        /* Much thicker on hover */
+        filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+        z-index: 100;
+    }
+
+    /* Mapping mode cursor override */
+    .layout-viewer.mapping-mode .plot-shape {
+        cursor: crosshair !important;
+    }
+
+    .plot-available {
+        fill: #dcfce7 !important;
+        /* Green-100 */
+        stroke: #16a34a !important;
+    }
+
+    .plot-sold {
+        fill: #fee2e2 !important;
+        /* Red-100 */
+        stroke: #dc2626 !important;
+    }
+
+    .plot-hold {
+        fill: #fef9c3 !important;
+        /* Yellow-100 */
+        stroke: #ca8a04 !important;
+    }
+
+    .plot-reserved {
+        fill: #fef9c3 !important;
+        /* Yellow-100 */
+        stroke: #ca8a04 !important;
+    }
+
+    .plot-selected {
+        stroke: #2563eb !important;
+        /* Blue-600 */
+        stroke-width: 3px !important;
+        fill: #dbeafe !important;
+    }
+
+    /* Plot number labels */
+    .plot-label {
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        font-weight: bold;
+        fill: #1e293b;
+        pointer-events: none;
+        user-select: none;
+        text-anchor: middle;
+        dominant-baseline: middle;
+    }
+
+    /* Legend */
+    .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .legend-color {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+
+    /* Sidebar */
+    .layout-sidebar {
+        width: 300px;
+        background: #fff;
+        border-left: 1px solid #eee;
+        padding: 20px;
+        display: none;
+        /* Hidden by default until plot selected */
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .zoom-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        z-index: 1000;
+    }
+
+    .zoom-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #eee;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .zoom-btn:hover {
+        background: #f8f9fa;
+        border-color: #007bff;
+    }
+
+    .navigation-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        z-index: 1000;
+    }
+
+    .nav-row {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+    }
+
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: rgba(0, 123, 255, 0.8);
+        color: white;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 16px;
+    }
+
+    .nav-btn:hover {
+        background: rgba(0, 123, 255, 1);
+        transform: scale(1.1);
+    }
+
+    .nav-btn:active {
+        transform: scale(0.95);
+    }
+
+    #moveCenter {
+        background: rgba(108, 117, 125, 0.8);
+    }
+
+    #moveCenter:hover {
+        background: rgba(108, 117, 125, 1);
+    }
+</style>
+
+<div class="container-fluid py-4" style="height: 100vh; overflow: hidden;">
+    <div class="layout-container">
+        <div class="layout-header">
+            <div>
+                <h4 class="mb-1">{{ project_name }} Layout</h4>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #dcfce7; border: 1px solid #16a34a;"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fef9c3; border: 1px solid #ca8a04;"></div>
+                        <span>Hold</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fee2e2; border: 1px solid #dc2626;"></div>
+                        <span>Sold</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layout-controls">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown"
+                        data-bs-toggle="dropdown">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <ul class="dropdown-menu p-3" style="width: 250px;">
+                        <li>
+                            <h6 class="dropdown-header">Status</h6>
+                        </li>
+                        <li>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" checked id="filterAvailable">
+                                <label class="form-check-label" for="filterAvailable">Available</label>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" checked id="filterSold">
+                                <label class="form-check-label" for="filterSold">Sold</label>
+                            </div>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <h6 class="dropdown-header">Facing</h6>
+                        </li>
+                        <li>
+                            <select class="form-select form-select-sm" id="filterFacing">
+                                <option value="">All Facings</option>
+                                <option value="East">East</option>
+                                <option value="West">West</option>
+                                <option value="North">North</option>
+                                <option value="South">South</option>
+                            </select>
+                        </li>
+                    </ul>
+                </div>
+                <button class="btn btn-primary" id="mappingModeBtn">
+                    <i class="bi bi-pencil-square me-1"></i> Map Plots
+                </button>
+            </div>
+        </div>
+
+        <div class="layout-viewer" id="panzoom-container">
+            <!-- SVG will be loaded here -->
+            <div id="svg-wrapper" style="width: 100%; height: 100%;"></div>
+
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomIn"><i class="bi bi-plus-lg"></i></button>
+                <button class="zoom-btn" id="zoomOut"><i class="bi bi-dash-lg"></i></button>
+                <button class="zoom-btn" id="zoomReset"><i class="bi bi-arrows-fullscreen"></i></button>
+            </div>
+
+            <div class="navigation-controls">
+                <div class="nav-row">
+                    <button class="nav-btn" id="moveUp" title="Move Up"><i class="bi bi-arrow-up"></i></button>
+                </div>
+                <div class="nav-row">
+                    <button class="nav-btn" id="moveLeft" title="Move Left"><i class="bi bi-arrow-left"></i></button>
+                    <button class="nav-btn" id="moveCenter" title="Center"><i class="bi bi-crosshair"></i></button>
+                    <button class="nav-btn" id="moveRight" title="Move Right"><i class="bi bi-arrow-right"></i></button>
+                </div>
+                <div class="nav-row">
+                    <button class="nav-btn" id="moveDown" title="Move Down"><i class="bi bi-arrow-down"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plot Details Sidebar -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="plotDetailsSidebar">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="sidebarTitle">Plot Details</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="plotInfoDisplay">
+            <div class="text-center mb-4">
+                <div class="display-4 fw-bold text-primary mb-2" id="detailPlotNo">--</div>
+                <div class="badge bg-success fs-6" id="detailStatus">Available</div>
+            </div>
+
+            <div class="card mb-3 bg-light border-0">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Facing</small>
+                            <strong id="detailFacing">--</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Sq. Yards</small>
+                            <strong id="detailSqYards">--</strong>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted d-block">Dimensions</small>
+                            <strong id="detailDimensions">--</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boundaries Card -->
+            <div class="card mb-3 bg-light border-0" id="boundariesCard" style="display: none;">
+                <div class="card-body">
+                    <h6 class="card-title mb-3 fw-bold">Boundaries</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <small class="text-muted d-block">East</small>
+                            <strong id="detailBoundaryEast" class="small">--</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">West</small>
+                            <strong id="detailBoundaryWest" class="small">--</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">North</small>
+                            <strong id="detailBoundaryNorth" class="small">--</strong>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">South</small>
+                            <strong id="detailBoundarySouth" class="small">--</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Admin Actions -->
+            <div id="adminActions" class="mt-4 pt-3 border-top" style="display: none;">
+                <button id="deleteMappingBtn" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-trash me-2"></i>Delete Plot Mapping
+                </button>
+            </div>
+        </div>
+
+        <!-- Mapping Form (Hidden by default) -->
+        <div id="mappingForm" style="display: none;">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Click a shape on the map to assign it to this plot.
+            </div>
+            <form id="plotMapForm">
+                <div class="mb-3">
+                    <label class="form-label">Plot Number</label>
+                    <input type="text" class="form-control form-control-lg" id="mapPlotNo" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Facing</label>
+                    <select class="form-select" id="mapFacing">
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                        <option value="North">North</option>
+                        <option value="South">South</option>
+                        <option value="North-East">North-East</option>
+                        <option value="North-West">North-West</option>
+                        <option value="South-East">South-East</option>
+                        <option value="South-West">South-West</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Sq. Yards</label>
+                    <input type="number" step="0.01" class="form-control" id="mapSqYards" placeholder="e.g., 120">
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Length</label>
+                        <input type="number" step="0.01" class="form-control" id="mapLength">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Width</label>
+                        <input type="number" step="0.01" class="form-control" id="mapWidth">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="mapStatus">
+                        <option value="available">Available</option>
+                        <option value="sold">Sold</option>
+                        <option value="hold">Hold</option>
+                    </select>
+                </div>
+
+                <!-- Boundary Information -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Boundaries</label>
+                    <div class="mb-2">
+                        <label class="form-label small">East Facing Boundary</label>
+                        <input type="text" class="form-control form-control-sm" id="mapBoundaryEast"
+                            placeholder="e.g., Road, Plot 123">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">West Facing Boundary</label>
+                        <input type="text" class="form-control form-control-sm" id="mapBoundaryWest"
+                            placeholder="e.g., Road, Plot 123">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">North Facing Boundary</label>
+                        <input type="text" class="form-control form-control-sm" id="mapBoundaryNorth"
+                            placeholder="e.g., Road, Plot 123">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">South Facing Boundary</label>
+                        <input type="text" class="form-control form-control-sm" id="mapBoundarySouth"
+                            placeholder="e.g., Road, Plot 123">
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Save Mapping</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Panzoom Library -->
+<script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+
+<!-- Data passed from backend -->
+<script id="project-data" type="application/json">
+{
+    "projectName": {{ project_name|tojson|safe }},
+    "soldPlots": {{ sold_plots|tojson|safe }},
+    "plotMetadata": {{ plot_metadata|tojson|safe }},
+    "layoutFile": {{ layout_file|tojson|safe }},
+    "layoutType": {{ layout_type|tojson|safe }},
+    "userRole": {{ user_role|tojson|safe }}
+}
+</script>
+
+<script>
+    // Parse data from JSON script tag
+    let projectName = '';
+    let soldPlots = [];
+    let plotMetadata = {};
+    let layoutFile = '';
+    let layoutType = '';
+    let userRole = '';
+    let isAdmin = false;
+
+    try {
+        const dataScript = document.getElementById('project-data');
+        if (dataScript) {
+            const data = JSON.parse(dataScript.textContent);
+            projectName = data.projectName || '';
+            soldPlots = data.soldPlots || [];
+            plotMetadata = data.plotMetadata || {};
+            layoutFile = data.layoutFile || '';
+            layoutType = data.layoutType || '';
+            userRole = data.userRole || '';
+            isAdmin = (userRole === 'admin');
+
+            console.log('Successfully parsed project data:', { projectName, soldPlots, plotMetadata, layoutFile, layoutType, userRole, isAdmin });
+        } else {
+            console.error('project-data script tag not found');
+        }
+    } catch (error) {
+        console.error('Error parsing project data:', error);
+    }
+
+    let isMappingMode = false;
+    let selectedElement = null;
+    let panzoomInstance = null;
+
+    console.log('Parsed data:', { projectName, soldPlots, plotMetadata });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM Content Loaded, initializing plot layout viewer...');
+        console.log('Project name:', projectName);
+        console.log('Sold plots:', soldPlots);
+        console.log('Plot metadata:', plotMetadata);
+        console.log('User role:', userRole, 'Is Admin:', isAdmin);
+
+        // Hide "Map Plots" button for non-admins
+        if (!isAdmin) {
+            const mappingBtn = document.getElementById('mappingModeBtn');
+            if (mappingBtn) {
+                mappingBtn.style.display = 'none';
+            }
+        }
+
+        // Load layout (PDF or SVG)
+        console.log('Loading layout from:', layoutFile);
+        console.log('Layout type:', layoutType);
+
+        if (!layoutFile || !layoutType) {
+            // No layout file exists - show upload message
+            showNoLayoutMessage();
+            return;
+        }
+
+        if (layoutType === 'pdf') {
+            loadPDFLayout(layoutFile);
+        } else {
+            loadSVGLayout(layoutFile);
+        }
+
+        // Zoom controls
+        document.getElementById('zoomIn').addEventListener('click', () => panzoomInstance.zoomIn());
+        document.getElementById('zoomOut').addEventListener('click', () => panzoomInstance.zoomOut());
+        document.getElementById('zoomReset').addEventListener('click', () => panzoomInstance.reset());
+
+        // Mapping Mode Toggle
+        document.getElementById('mappingModeBtn').addEventListener('click', function () {
+            isMappingMode = !isMappingMode;
+            this.classList.toggle('btn-primary');
+            this.classList.toggle('btn-danger');
+            this.innerHTML = isMappingMode ?
+                '<i class="bi bi-x-circle me-1"></i> Exit Mapping' :
+                '<i class="bi bi-pencil-square me-1"></i> Map Plots';
+
+            // Update CSS class for layout viewer
+            const layoutViewer = document.querySelector('.layout-viewer');
+            if (layoutViewer) {
+                if (isMappingMode) {
+                    layoutViewer.classList.add('mapping-mode');
+                } else {
+                    layoutViewer.classList.remove('mapping-mode');
+                }
+            }
+
+            // Update cursor for all plot shapes
+            const shapes = document.querySelectorAll('.plot-shape');
+
+            console.log('Updating cursors for mapping mode:', isMappingMode);
+            console.log('Found shapes:', shapes.length);
+
+            shapes.forEach((shape, index) => {
+                if (isMappingMode) {
+                    shape.style.cursor = 'crosshair';
+                    shape.style.setProperty('cursor', 'crosshair', 'important');
+                } else {
+                    shape.style.cursor = 'pointer';
+                    shape.style.setProperty('cursor', 'pointer', 'important');
+                }
+                console.log(`Updated cursor for shape ${index}: ${shape.tagName}#${shape.id}`);
+            });
+
+            if (isMappingMode) {
+                alert("Mapping Mode Enabled:\nClick on any shape in the layout to assign a plot number to it.\n\nThe cursor will change to crosshair over plot shapes.\n\nOpen browser console (F12) to see debug messages.");
+            }
+        });
+
+        // Mapping Form Submit
+        document.getElementById('plotMapForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            saveMapping();
+        });
+
+        // Delete Mapping Button
+        const deleteBtn = document.getElementById('deleteMappingBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function () {
+                deleteMapping();
+            });
+        }
+    });
+
+    function showNoLayoutMessage() {
+        const wrapper = document.getElementById('svg-wrapper');
+        wrapper.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; color: #666; padding: 2rem;">
+                <i class="bi bi-file-earmark-arrow-up" style="font-size: 3rem; margin-bottom: 1rem; color: #007bff;"></i>
+                <h4>No Layout File Available</h4>
+                <p>Layout file not found for project: <strong>${projectName}</strong></p>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-family: monospace; font-size: 0.9rem;">
+                    <strong>Expected files:</strong><br>
+                    • PDF: <code>static/layouts/${projectName.toLowerCase()}_layout.pdf</code><br>
+                    • SVG: <code>static/layouts/${projectName.toLowerCase()}_layout.svg</code>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="bi bi-house me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        `;
+
+        // Disable mapping controls when no layout
+        document.getElementById('mappingModeBtn').disabled = true;
+        document.getElementById('zoomIn').disabled = true;
+        document.getElementById('zoomOut').disabled = true;
+        document.getElementById('zoomReset').disabled = true;
+    }
+
+    function loadPDFLayout(pdfPath) {
+        console.log('Loading PDF layout:', pdfPath);
+
+        // Load PDF using PDF.js
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = function () {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+            fetch(pdfPath)
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    return pdfjsLib.getDocument(data).promise;
+                })
+                .then(pdf => {
+                    console.log('PDF loaded with', pdf.numPages, 'pages');
+                    return pdf.getPage(1);
+                })
+                .then(page => {
+                    const scale = 0.3; // Set to 30% zoom level
+                    const viewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    // Set canvas size for better display
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.display = 'block';
+
+                    const wrapper = document.getElementById('svg-wrapper');
+                    wrapper.innerHTML = '';
+                    wrapper.appendChild(canvas);
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+
+                    return page.render(renderContext).promise;
+                })
+                .then(() => {
+                    console.log('PDF rendered successfully');
+                    // Initialize panzoom for canvas
+                    const wrapper = document.getElementById('svg-wrapper');
+                    const canvas = wrapper.querySelector('canvas');
+                    initializePanzoom(wrapper, canvas);
+
+                    // Add overlay for clickable areas
+                    addClickableOverlay(wrapper, canvas);
+                })
+                .catch(error => {
+                    console.error('Error loading PDF:', error);
+                    showLayoutError(error, pdfPath);
+                });
+        };
+        document.head.appendChild(script);
+    }
+
+    function loadSVGLayout(svgPath) {
+        console.log('Loading SVG layout:', svgPath);
+
+        fetch(svgPath, { method: 'HEAD' })
+            .then(response => {
+                console.log('SVG HEAD request status:', response.status);
+                if (response.ok) {
+                    return fetch(svgPath);
+                } else {
+                    throw new Error(`SVG file not accessible: ${response.status}`);
+                }
+            })
+            .then(response => {
+                console.log('SVG response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(svgContent => {
+                console.log('SVG content loaded, length:', svgContent.length);
+                console.log('SVG content preview (first 500 chars):', svgContent.substring(0, 500));
+                console.log('SVG content starts with:', svgContent.substring(0, 100));
+                console.log('Contains <svg> tag?', svgContent.includes('<svg'));
+                console.log('Contains </svg> tag?', svgContent.includes('</svg>'));
+
+                if (svgContent.trim().length === 0) {
+                    throw new Error('SVG file is empty');
+                }
+
+                if (!svgContent.includes('<svg')) {
+                    console.error('SVG content does not contain <svg> tag');
+                    console.error('First 1000 chars:', svgContent.substring(0, 1000));
+                    throw new Error('Loaded content is not a valid SVG (no <svg> tag found)');
+                }
+
+                const wrapper = document.getElementById('svg-wrapper');
+                wrapper.innerHTML = svgContent;
+
+                const svg = wrapper.querySelector('svg');
+                if (!svg) {
+                    console.error('No SVG element found in loaded content');
+                    console.error('Wrapper innerHTML length:', wrapper.innerHTML.length);
+                    console.error('Wrapper innerHTML preview:', wrapper.innerHTML.substring(0, 500));
+                    throw new Error('No SVG element found in the loaded content');
+                }
+
+                console.log('SVG element found:', svg);
+                console.log('SVG element tag:', svg.tagName);
+                console.log('SVG element attributes:', svg.attributes.length);
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+
+                initializePanzoom(wrapper, svg);
+                processSvgElements(svg);
+            })
+            .catch(error => {
+                console.error('Error loading SVG:', error);
+                showLayoutError(error, svgPath);
+            });
+    }
+
+    function initializePanzoom(wrapper, element) {
+        // Initialize Panzoom
+        panzoomInstance = Panzoom(wrapper, {
+            maxScale: 5,
+            minScale: 0.5,
+            contain: 'outside',
+            exclude: ['.plot-shape'] // Exclude plot shapes from Panzoom drag handling
+        });
+
+        wrapper.parentElement.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+
+        // Add custom click handler to prevent Panzoom from interfering with shape clicks
+        wrapper.addEventListener('click', function (e) {
+            // If clicking on a plot shape, don't let Panzoom handle it
+            if (e.target.classList.contains('plot-shape') ||
+                e.target.closest('.plot-shape')) {
+                e.stopPropagation();
+                return;
+            }
+        });
+
+        // Add navigation controls after panzoom is initialized
+        addNavigationControls();
+    }
+
+    function addNavigationControls() {
+        console.log('Adding navigation controls...');
+        console.log('panzoomInstance:', panzoomInstance);
+
+        // Test if buttons exist
+        const moveUp = document.getElementById('moveUp');
+        const moveDown = document.getElementById('moveDown');
+        const moveLeft = document.getElementById('moveLeft');
+        const moveRight = document.getElementById('moveRight');
+        const moveCenter = document.getElementById('moveCenter');
+
+        console.log('Buttons found:', { moveUp, moveDown, moveLeft, moveRight, moveCenter });
+
+        // Remove existing listeners to prevent duplicates
+        const newMoveUp = moveUp.cloneNode(true);
+        const newMoveDown = moveDown.cloneNode(true);
+        const newMoveLeft = moveLeft.cloneNode(true);
+        const newMoveRight = moveRight.cloneNode(true);
+        const newMoveCenter = moveCenter.cloneNode(true);
+
+        moveUp.parentNode.replaceChild(newMoveUp, moveUp);
+        moveDown.parentNode.replaceChild(newMoveDown, moveDown);
+        moveLeft.parentNode.replaceChild(newMoveLeft, moveLeft);
+        moveRight.parentNode.replaceChild(newMoveRight, moveRight);
+        moveCenter.parentNode.replaceChild(newMoveCenter, moveCenter);
+
+        // Navigation controls
+        newMoveUp.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Move up clicked');
+            if (panzoomInstance) {
+                const currentScale = panzoomInstance.getScale();
+                const moveAmount = 50 / currentScale;
+                console.log('Moving up by:', moveAmount);
+                panzoomInstance.pan(0, moveAmount);
+            } else {
+                console.error('panzoomInstance is null');
+            }
+        });
+
+        newMoveDown.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Move down clicked');
+            if (panzoomInstance) {
+                const currentScale = panzoomInstance.getScale();
+                const moveAmount = 50 / currentScale;
+                console.log('Moving down by:', moveAmount);
+                panzoomInstance.pan(0, -moveAmount);
+            } else {
+                console.error('panzoomInstance is null');
+            }
+        });
+
+        newMoveLeft.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Move left clicked');
+            if (panzoomInstance) {
+                const currentScale = panzoomInstance.getScale();
+                const moveAmount = 50 / currentScale;
+                console.log('Moving left by:', moveAmount);
+                panzoomInstance.pan(moveAmount, 0);
+            } else {
+                console.error('panzoomInstance is null');
+            }
+        });
+
+        newMoveRight.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Move right clicked');
+            if (panzoomInstance) {
+                const currentScale = panzoomInstance.getScale();
+                const moveAmount = 50 / currentScale;
+                console.log('Moving right by:', moveAmount);
+                panzoomInstance.pan(-moveAmount, 0);
+            } else {
+                console.error('panzoomInstance is null');
+            }
+        });
+
+        newMoveCenter.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Move center clicked');
+            if (panzoomInstance) {
+                console.log('Resetting panzoom');
+                panzoomInstance.reset();
+            } else {
+                console.error('panzoomInstance is null');
+            }
+        });
+    }
+
+    function addClickableOverlay(wrapper, canvas) {
+        // For PDF, we'll add a transparent overlay for mapping
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.pointerEvents = 'all';
+        overlay.style.cursor = 'crosshair';
+
+        // Add very fine grid for precise plot boundary matching
+        const gridSize = 15; // Reduced to 15px for very precise areas
+        const canvasRect = canvas.getBoundingClientRect();
+
+        for (let x = 0; x < canvas.width; x += gridSize) {
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                const area = document.createElement('div');
+                area.style.position = 'absolute';
+                area.style.left = (x / canvas.width * 100) + '%';
+                area.style.top = (y / canvas.height * 100) + '%';
+                area.style.width = (gridSize / canvas.width * 100) + '%';
+                area.style.height = (gridSize / canvas.height * 100) + '%';
+                area.style.border = '1px dotted rgba(0,255,0,0.15)'; // Very light green dotted
+                area.style.cursor = 'crosshair';
+                area.style.boxSizing = 'border-box';
+                area.style.backgroundColor = 'rgba(0,255,0,0.02)'; // Very subtle green background
+                area.classList.add('plot-area');
+                area.dataset.x = x;
+                area.dataset.y = y;
+
+                // Only show border on hover to reduce visual clutter
+                area.addEventListener('mouseenter', function () {
+                    this.style.border = '1px dotted rgba(0,255,0,0.4)';
+                    this.style.backgroundColor = 'rgba(0,255,0,0.08)';
+                });
+
+                area.addEventListener('mouseleave', function () {
+                    this.style.border = '1px dotted rgba(0,255,0,0.15)';
+                    this.style.backgroundColor = 'rgba(0,255,0,0.02)';
+                });
+
+                area.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (isMappingMode) {
+                        selectedElement = this;
+                        showMappingForm(this);
+                    }
+                });
+
+                overlay.appendChild(area);
+            }
+        }
+
+        wrapper.appendChild(overlay);
+    }
+
+    function showLayoutError(error, filePath) {
+        // Display error message to user
+        const wrapper = document.getElementById('svg-wrapper');
+        wrapper.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; color: #666; padding: 2rem;">
+                <i class="bi bi-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: #dc3545;"></i>
+                <h4>Layout Not Available</h4>
+                <p>Could not load the layout file: ${error.message}</p>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-family: monospace; font-size: 0.9rem;">
+                    <strong>Expected path:</strong> ${filePath}<br>
+                    <strong>Layout type:</strong> 
+                </div>
+                <div class="zoom-controls">
+                    <button id="zoomIn" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-zoom-in"></i>
+                    </button>
+                    <button id="zoomOut" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-zoom-out"></i>
+                    </button>
+                    <button id="zoomReset" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+                <div class="navigation-controls">
+                    <div class="nav-row">
+                        <button id="moveUp" class="btn btn-sm btn-outline-primary" title="Move Up">
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                    </div>
+                    <div class="nav-row">
+                        <button id="moveLeft" class="btn btn-sm btn-outline-primary" title="Move Left">
+                            <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <button id="moveCenter" class="btn btn-sm btn-outline-primary" title="Center">
+                            <i class="bi bi-crosshair"></i>
+                        </button>
+                        <button id="moveRight" class="btn btn-sm btn-outline-primary" title="Move Right">
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="nav-row">
+                        <button id="moveDown" class="btn btn-sm btn-outline-primary" title="Move Down">
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function processSvgElements(svg) {
+        console.log('Processing SVG elements...');
+        console.log('SVG children count:', svg.children.length);
+        console.log('SVG innerHTML preview:', svg.innerHTML.substring(0, 500));
+
+        // Try multiple selectors to find shapes
+        const selectors = [
+            'rect, polygon, path, circle, line, polyline, g, ellipse, text',
+            '*[id]',
+            '*[class]',
+            '*[stroke]',
+            '*[fill]',
+            'g > *',
+            '*'
+        ];
+
+        let allShapes = [];
+
+        for (const selector of selectors) {
+            const shapes = svg.querySelectorAll(selector);
+            console.log(`Selector "${selector}" found ${shapes.length} elements`);
+            if (shapes.length > 0) {
+                allShapes = Array.from(shapes);
+                break;
+            }
+        }
+
+        console.log(`Total shapes/cs found: ${allShapes.length}`);
+
+        if (allShapes.length === 0) {
+            console.warn('No shapes found in SVG, adding fallback overlay');
+            addFallbackOverlay(svg);
+            return;
+        }
+
+        // Process each shape for mapping
+        allShapes.forEach((shape, index) => {
+            // Ensure shape has an ID
+            if (!shape.id) {
+                shape.id = `gen-shape-${index}`;
+            }
+
+            // Make shape clickable
+            shape.style.cursor = 'pointer';
+            shape.classList.add('plot-shape');
+
+            // Add hover effects
+            shape.addEventListener('mouseenter', function () {
+                if (!isMappingMode) return;
+                this.style.opacity = '0.7';
+                this.style.filter = 'brightness(1.2)';
+            });
+
+            shape.addEventListener('mouseleave', function () {
+                if (!isMappingMode) return;
+                this.style.opacity = '';
+                this.style.filter = '';
+            });
+
+
+            // Explicitly set pointer events
+            shape.style.pointerEvents = 'all';
+
+            // Add click handler for mapping
+            shape.addEventListener('click', function (e) {
+                console.log('=== CLICK EVENT ===');
+                console.log('Clicked element:', this.tagName, this.id, this.className);
+                console.log('Mapping mode:', isMappingMode);
+                console.log('Event details:', {
+                    target: e.target.tagName,
+                    currentTarget: e.currentTarget.tagName,
+                    defaultPrevented: e.defaultPrevented,
+                    stopPropagation: e.cancelable
+                });
+
+                // Prevent drag from triggering click (Panzoom handling)
+                if (e.defaultPrevented) {
+                    console.log('Event was already prevented, returning');
+                    return;
+                }
+
+                // Stop propagation to prevent double-firing if clicking nested elements
+                e.stopPropagation();
+                console.log('Stopped propagation');
+
+                // Prevent Panzoom from handling this click
+                e.preventDefault();
+                console.log('Prevented default behavior');
+
+                selectedElement = this;
+                console.log('Set selectedElement:', this);
+
+                if (isMappingMode) {
+                    console.log('In mapping mode, showing mapping form for element:', this.id);
+                    showMappingForm(this);
+                } else {
+                    const plotNo = this.getAttribute('data-plot-no');
+                    console.log('Not in mapping mode, checking plot number:', plotNo);
+                    if (plotNo) {
+                        showPlotDetails(plotNo);
+                    } else {
+                        console.log('Element has no mapped plot number');
+                        // If not in mapping mode and no plot number, maybe show a toast?
+                        if (confirm('This plot is not mapped yet. Switch to Mapping Mode to map it?')) {
+                            document.getElementById('mappingModeBtn').click();
+                            showMappingForm(this);
+                        }
+                    }
+                }
+            });
+
+            // Add mouseover for debugging
+            shape.addEventListener('mouseover', function (e) {
+                // console.log('Hovering:', this.tagName, this.id);
+            });
+        });
+
+        // Restore mappings from metadata
+        restoreMappings(svg);
+
+        // Apply status colors
+        applyPlotStatuses();
+        console.log('SVG processing completed');
+    }
+
+    function applyPlotStatuses() {
+        const shapes = document.querySelectorAll('.plot-shape');
+        shapes.forEach(shape => {
+            const plotNo = shape.getAttribute('data-plot-no');
+            if (plotNo) {
+                shape.classList.remove('plot-available', 'plot-sold', 'plot-hold', 'plot-reserved');
+
+                // Get status from metadata if available, otherwise check sold_plots
+                let status = 'available';
+                if (plotMetadata[plotNo] && plotMetadata[plotNo].status) {
+                    status = plotMetadata[plotNo].status;
+                } else if (soldPlots.includes(plotNo)) {
+                    status = 'sold';
+                }
+
+                if (status === 'sold') {
+                    shape.classList.add('plot-sold');
+                } else if (status === 'hold') {
+                    shape.classList.add('plot-hold');
+                } else {
+                    shape.classList.add('plot-available');
+                }
+            }
+        });
+    }
+
+    function restoreMappings(svg) {
+        console.log('Restoring plot mappings...');
+        let restoredCount = 0;
+
+        // Iterate through metadata and find corresponding SVG elements
+        Object.keys(plotMetadata).forEach(plotNo => {
+            const meta = plotMetadata[plotNo];
+            if (meta.svg_element_id) {
+                const element = svg.getElementById(meta.svg_element_id);
+                if (element) {
+                    element.setAttribute('data-plot-no', plotNo);
+                    element.setAttribute('data-status', meta.status || 'available');
+                    restoredCount++;
+                } else {
+                    console.warn(`Could not find SVG element with ID '${meta.svg_element_id}' for Plot ${plotNo}`);
+                }
+            } else {
+                console.warn(`Plot ${plotNo} has no svg_element_id saved.`);
+            }
+        });
+
+        console.log(`Restored ${restoredCount} plot mappings.`);
+
+        // Add labels for all restored plots
+        updateAllPlotLabels();
+    }
+
+    function addPlotLabel(element, plotNo) {
+        // Remove existing label if any
+        const existingLabel = document.getElementById(`label-${element.id}`);
+        if (existingLabel) {
+            existingLabel.remove();
+        }
+
+        // Get the bounding box of the shape
+        const bbox = element.getBBox();
+        const centerX = bbox.x + bbox.width / 2;
+        const centerY = bbox.y + bbox.height / 2;
+
+        // Create text element
+        const svg = element.ownerSVGElement;
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('id', `label-${element.id}`);
+        text.setAttribute('x', centerX);
+        text.setAttribute('y', centerY);
+        text.setAttribute('class', 'plot-label');
+        text.textContent = plotNo;
+
+        // Append to SVG
+        svg.appendChild(text);
+    }
+
+    function updateAllPlotLabels() {
+        // Add labels for all mapped plots
+        document.querySelectorAll('.plot-shape[data-plot-no]').forEach(shape => {
+            const plotNo = shape.getAttribute('data-plot-no');
+            if (plotNo) {
+                addPlotLabel(shape, plotNo);
+            }
+        });
+    }
+
+    function showMappingForm(element) {
+        const offcanvas = new bootstrap.Offcanvas(document.getElementById('plotDetailsSidebar'));
+        document.getElementById('plotInfoDisplay').style.display = 'none';
+        document.getElementById('mappingForm').style.display = 'block';
+        document.getElementById('sidebarTitle').textContent = 'Map Plot';
+
+        // Pre-fill if already mapped
+        const existingPlotNo = element.getAttribute('data-plot-no');
+        if (existingPlotNo) {
+            document.getElementById('mapPlotNo').value = existingPlotNo;
+            if (plotMetadata[existingPlotNo]) {
+                document.getElementById('mapFacing').value = plotMetadata[existingPlotNo].facing || 'East';
+                document.getElementById('mapLength').value = plotMetadata[existingPlotNo].length || '';
+                document.getElementById('mapWidth').value = plotMetadata[existingPlotNo].width || '';
+                document.getElementById('mapSqYards').value = plotMetadata[existingPlotNo].sq_yards || '';
+                document.getElementById('mapStatus').value = plotMetadata[existingPlotNo].status || 'available';
+                document.getElementById('mapBoundaryEast').value = plotMetadata[existingPlotNo].boundary_east || '';
+                document.getElementById('mapBoundaryWest').value = plotMetadata[existingPlotNo].boundary_west || '';
+                document.getElementById('mapBoundaryNorth').value = plotMetadata[existingPlotNo].boundary_north || '';
+                document.getElementById('mapBoundarySouth').value = plotMetadata[existingPlotNo].boundary_south || '';
+            }
+        } else {
+            // Clear all fields for new plot
+            document.getElementById('mapPlotNo').value = '';
+            document.getElementById('mapFacing').value = 'East';
+            document.getElementById('mapLength').value = '';
+            document.getElementById('mapWidth').value = '';
+            document.getElementById('mapSqYards').value = '';
+            document.getElementById('mapStatus').value = 'available';
+            document.getElementById('mapBoundaryEast').value = '';
+            document.getElementById('mapBoundaryWest').value = '';
+            document.getElementById('mapBoundaryNorth').value = '';
+            document.getElementById('mapBoundarySouth').value = '';
+        }
+
+        offcanvas.show();
+
+        // Highlight selected
+        document.querySelectorAll('.plot-selected').forEach(el => el.classList.remove('plot-selected'));
+        element.classList.add('plot-selected');
+    }
+
+    function showPlotDetails(plotNo) {
+        const offcanvas = new bootstrap.Offcanvas(document.getElementById('plotDetailsSidebar'));
+        document.getElementById('plotInfoDisplay').style.display = 'block';
+        document.getElementById('mappingForm').style.display = 'none';
+        document.getElementById('sidebarTitle').textContent = 'Plot Details';
+
+        const meta = plotMetadata[plotNo] || {};
+
+        // Use stored status from metadata, fallback to checking sold_plots
+        let status = meta.status || (soldPlots.includes(plotNo) ? 'sold' : 'available');
+
+        document.getElementById('detailPlotNo').textContent = 'Plot ' + plotNo;
+
+        const statusEl = document.getElementById('detailStatus');
+        if (status === 'sold') {
+            statusEl.textContent = 'Sold';
+            statusEl.className = 'badge bg-danger fs-6';
+        } else if (status === 'hold') {
+            statusEl.textContent = 'Hold';
+            statusEl.className = 'badge bg-warning fs-6';
+        } else {
+            statusEl.textContent = 'Available';
+            statusEl.className = 'badge bg-success fs-6';
+        }
+
+        document.getElementById('detailFacing').textContent = meta.facing || '--';
+        document.getElementById('detailSqYards').textContent = meta.sq_yards || meta.area || '--';
+        document.getElementById('detailDimensions').textContent = (meta.length && meta.width) ?
+            `${meta.length} x ${meta.width}` : '--';
+
+        // Display boundaries if available
+        const hasBoundaries = meta.boundary_east || meta.boundary_west || meta.boundary_north || meta.boundary_south;
+        const boundariesCard = document.getElementById('boundariesCard');
+
+        if (hasBoundaries) {
+            boundariesCard.style.display = 'block';
+            document.getElementById('detailBoundaryEast').textContent = meta.boundary_east || '--';
+            document.getElementById('detailBoundaryWest').textContent = meta.boundary_west || '--';
+            document.getElementById('detailBoundaryNorth').textContent = meta.boundary_north || '--';
+            document.getElementById('detailBoundarySouth').textContent = meta.boundary_south || '--';
+        } else {
+            boundariesCard.style.display = 'none';
+        }
+
+        offcanvas.show();
+
+        // Show admin actions if admin
+        const adminActions = document.getElementById('adminActions');
+        if (adminActions) {
+            adminActions.style.display = isAdmin ? 'block' : 'none';
+        }
+
+        // Highlight selected
+        document.querySelectorAll('.plot-selected').forEach(el => el.classList.remove('plot-selected'));
+        selectedElement.classList.add('plot-selected');
+    }
+
+    function saveMapping() {
+        const plotNo = document.getElementById('mapPlotNo').value;
+        const facing = document.getElementById('mapFacing').value;
+        const length = document.getElementById('mapLength').value;
+        const width = document.getElementById('mapWidth').value;
+        const sqYards = document.getElementById('mapSqYards').value;
+        const status = document.getElementById('mapStatus').value;
+        const boundaryEast = document.getElementById('mapBoundaryEast').value;
+        const boundaryWest = document.getElementById('mapBoundaryWest').value;
+        const boundaryNorth = document.getElementById('mapBoundaryNorth').value;
+        const boundarySouth = document.getElementById('mapBoundarySouth').value;
+
+        if (!selectedElement) return;
+
+        // Update UI immediately
+        selectedElement.setAttribute('data-plot-no', plotNo);
+        selectedElement.setAttribute('data-status', status);
+
+        // Save to backend
+        fetch('/api/plot-mapping/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                project_name: projectName,
+                plot_no: plotNo,
+                facing: facing,
+                length: length,
+                width: width,
+                sq_yards: sqYards,
+                status: status,
+                boundary_east: boundaryEast,
+                boundary_west: boundaryWest,
+                boundary_north: boundaryNorth,
+                boundary_south: boundarySouth,
+                element_id: selectedElement.id || ''
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update local metadata
+                    if (!plotMetadata[plotNo]) plotMetadata[plotNo] = {};
+                    plotMetadata[plotNo].facing = facing;
+                    plotMetadata[plotNo].length = length;
+                    plotMetadata[plotNo].width = width;
+                    plotMetadata[plotNo].sq_yards = sqYards;
+                    plotMetadata[plotNo].status = status;
+                    plotMetadata[plotNo].boundary_east = boundaryEast;
+                    plotMetadata[plotNo].boundary_west = boundaryWest;
+                    plotMetadata[plotNo].boundary_north = boundaryNorth;
+                    plotMetadata[plotNo].boundary_south = boundarySouth;
+
+                    // Add plot number label to the shape
+                    addPlotLabel(selectedElement, plotNo);
+
+                    alert(`Mapped Plot ${plotNo} successfully with status: ${status}!`);
+                    applyPlotStatuses();
+
+                    // Close sidebar
+                    const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('plotDetailsSidebar'));
+                    offcanvas.hide();
+                } else {
+                    alert('Error saving mapping: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error saving mapping');
+            });
+    }
+
+    function deleteMapping() {
+        if (!selectedElement) return;
+
+        const plotNo = selectedElement.getAttribute('data-plot-no');
+        if (!plotNo) return;
+
+        if (!confirm(`Are you sure you want to delete the mapping for Plot ${plotNo}? This cannot be undone.`)) {
+            return;
+        }
+
+        fetch('/api/plot-mapping/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                project_name: projectName,
+                plot_no: plotNo
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove from local metadata
+                    delete plotMetadata[plotNo];
+
+                    // Update UI
+                    selectedElement.removeAttribute('data-plot-no');
+                    selectedElement.removeAttribute('data-status');
+                    selectedElement.classList.remove('plot-available', 'plot-sold', 'plot-hold', 'plot-reserved');
+
+                    // Remove label
+                    const label = document.getElementById(`label-${selectedElement.id}`);
+                    if (label) label.remove();
+
+                    alert(`Mapping for Plot ${plotNo} deleted successfully.`);
+
+                    // Close sidebar
+                    const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('plotDetailsSidebar'));
+                    offcanvas.hide();
+                } else {
+                    alert('Error deleting mapping: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting mapping');
+            });
+    }
+</script>
+
+{% endblock %}

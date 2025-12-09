@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .view-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .page-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .plot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .plot-tile {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 1 / 1;
+        min-height: 80px;
+    }
+
+    .plot-tile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        border-color: #3b82f6;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .plot-number {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0;
+        white-space: nowrap;
+    }
+
+    .plot-info {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .commission-amount {
+        font-size: 14px;
+        font-weight: 600;
+        color: #059669;
+        margin-top: auto;
+        padding-top: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px;
+        color: #94a3b8;
+    }
+
+    .project-select-container {
+        max-width: 400px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="view-card">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">View Commissions</h1>
+                <p class="text-muted mb-0">Select a project to view commission details by plot</p>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        <form method="get" action="{{ url_for('view_commissions') }}" class="mb-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="project" class="form-label fw-bold">Select Project</label>
+                    <select name="project" id="project" class="form-select">
+                        <option value="">All Projects</option>
+                        {% for p in projects %}
+                        <option value="{{ p }}" {% if selected_project==p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="search_plot" class="form-label fw-bold">Search Plot Number</label>
+                    <input type="text" class="form-control" id="search_plot" name="search_plot"
+                        value="{{ search_plot }}" placeholder="Enter plot number...">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-2"></i>Search
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        {% if plots %}
+        <div class="d-flex justify-content-between align-items-center mt-4 border-bottom pb-2">
+            <h5 class="mb-0">Found {{ plots|length }} Commission(s)</h5>
+        </div>
+
+        <div class="plot-grid">
+            {% for plot in plots %}
+            <a href="{{ url_for('view_commission_detail', project_name=plot.project_name, plot_no=plot.plot_no) }}"
+                class="plot-tile">
+                <div class="plot-number">Plot {{ plot.plot_no }}</div>
+                <div class="plot-info">{{ plot.project_name }}</div>
+            </a>
+            {% endfor %}
+        </div>
+        {% elif selected_project or search_plot %}
+        <div class="empty-state">
+            <i class="bi bi-inbox display-4 mb-3 d-block"></i>
+            <h5>No commissions found</h5>
+            <p>No records found matching your criteria.</p>
+            <a href="{{ url_for('commission_calculator') }}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Calculate New Commission
+            </a>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-search display-4 mb-3 d-block"></i>
+            <h5>Search Commissions</h5>
+            <p>Select a project or enter a plot number to view commission records.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
