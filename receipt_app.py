@@ -523,7 +523,7 @@ def enforce_login():
     Protects all routes except /login and static file access and a few public endpoints.
     """
     # endpoints that should be accessible without login
-    public = {"login", "static", "plot_lookup", "api.plot_lookup", "_routes", "list_routes"}
+    public = {"login", "static", "plot_lookup", "api.plot_lookup", "_routes", "list_routes", "contact_lead"}
     
     # Allow Landing Page on root domain (www) without login
     if getattr(g, 'subdomain', 'www') == 'www' and request.endpoint == 'index':
