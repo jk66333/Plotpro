@@ -456,7 +456,7 @@ def tenant_routing():
     if request.path.startswith('/static'):
         return
 
-    host = request.headers.get("Host", "").split(":")[0]  # remove port if any
+    host = request.headers.get("Host", "").split(":")[0].lower()  # remove port if any, lowercase
     
     # Extract subdomain
     # Logic: if host is 'srinidhi.plotpro.in', subdomain is 'srinidhi'
