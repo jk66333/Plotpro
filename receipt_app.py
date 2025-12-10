@@ -13,6 +13,7 @@ from flask import (
     session,
     flash,
     send_file,
+    g,
 )
 from datetime import datetime
 import os
