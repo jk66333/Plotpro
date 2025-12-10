@@ -18,7 +18,11 @@ from flask import (
 from datetime import datetime
 import os
 import io
+import io
 import base64
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import json
 from pathlib import Path
 from urllib.parse import urlparse, quote as urlquote
@@ -564,6 +568,85 @@ def index():
     conn.close()
     projects = get_projects()
     return render_template("form.html", recent=rows, r=None, edit_mode=False, projects=projects)
+
+@app.route("/api/contact_lead", methods=["POST"])
+def contact_lead():
+    """
+    Handle contact form submission from Landing Page.
+    1. Save to Master DB (leads table)
+    2. Send Email (if configured)
+    """
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+        
+    try:
+        # 1. Save to Database
+        master_conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database="plotpro_master"
+        )
+        c = master_conn.cursor()
+        c.execute("""
+            INSERT INTO leads (first_name, last_name, email, phone, company, plot_count, message)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            data.get("firstName"), 
+            data.get("lastName"), 
+            data.get("email"), 
+            data.get("phone"), 
+            data.get("company"), 
+            data.get("plotCount"), 
+            data.get("message")
+        ))
+        master_conn.commit()
+        master_conn.close()
+        
+        # 2. Send Email (Best Effort)
+        smtp_server = os.getenv("MAIL_SERVER")
+        smtp_port = os.getenv("MAIL_PORT")
+        smtp_user = os.getenv("MAIL_USERNAME")
+        smtp_pass = os.getenv("MAIL_PASSWORD")
+        
+        if smtp_server and smtp_user and smtp_pass:
+            try:
+                msg = MIMEMultipart()
+                sender = smtp_user
+                recipient = "sales@plotpro.in"
+                msg['From'] = f"PlotPro Website <{sender}>"
+                msg['To'] = recipient
+                msg['Subject'] = f"New Lead: {data.get('firstName')} ({data.get('company')})"
+                
+                body = f"""
+                New Demo Request Verification:
+                ---------------------------
+                Name: {data.get('firstName')} {data.get('lastName')}
+                Company: {data.get('company')}
+                Phone: {data.get('phone')}
+                Email: {data.get('email')}
+                Plots: {data.get('plotCount')}
+                
+                Message:
+                {data.get('message')}
+                """
+                msg.attach(MIMEText(body, 'plain'))
+                
+                server = smtplib.SMTP(smtp_server, int(smtp_port) if smtp_port else 587)
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(sender, recipient, msg.as_string())
+                server.quit()
+                print("Lead notification email sent.")
+            except Exception as e:
+                print(f"Failed to send email: {e}")
+        
+        return jsonify({"message": "Success", "status": "saved"}), 200
+
+    except Exception as e:
+        print(f"Lead API Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/create", methods=["POST"])

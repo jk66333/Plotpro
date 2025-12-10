@@ -1288,14 +1288,36 @@
                 message: document.getElementById('message').value
             };
 
-            // Here you would typically send this data to your backend
-            console.log('Form submitted:', formData);
+            const btn = this.querySelector('.submit-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Sending...';
+            btn.disabled = true;
 
-            // Show success message
-            alert('Thank you! We will get back to you within 24 hours.');
-
-            // Reset form
-            this.reset();
+            // Send to Backend
+            fetch('/api/contact_lead', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'saved') {
+                        alert('Thanks! We received your request and will contact you shortly.');
+                        document.getElementById('contactForm').reset();
+                    } else {
+                        alert('Something went wrong. Please try again or call us directly.');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert('Connection error. Please try again.');
+                })
+                .finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
         });
 
         // Smooth scrolling

@@ -44,6 +44,22 @@ def init_master_db():
     );
     """)
 
+    print("Creating leads table...")
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS leads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        company VARCHAR(255),
+        plot_count VARCHAR(50),
+        message TEXT,
+        status VARCHAR(50) DEFAULT 'new', -- new, contacted, converted
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
     # Seed with a default/test tenant if table is empty
     c.execute("SELECT COUNT(*) FROM tenants")
     if c.fetchone()[0] == 0:
