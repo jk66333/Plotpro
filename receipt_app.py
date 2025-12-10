@@ -1,6 +1,7 @@
 # receipt_app.py
 import re
 import database
+import mysql.connector
 from flask import (
     Flask,
     render_template,
