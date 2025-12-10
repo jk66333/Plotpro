@@ -471,6 +471,7 @@ def tenant_routing():
         subdomain = "www"
     
     import flask
+    print(f"DEBUG: Host={host}, Count={host.count('.')}, Subdomain={subdomain}") # DEBUG LOG
     flask.g.subdomain = subdomain
 
     # Connect to Master DB
