@@ -34,32 +34,18 @@ def provision_new_tenant(name, subdomain, brand_color="#f16924"):
         print(f"⚠️  Database creation failed (might exist): {err}")
     conn.close()
 
+    
     # 2. Import Schema
-    # Locate mysql binary again just to be safe, or assume 'mysql' in path if available.
-    # Since we know dump worked with absolute path, let's try assuming 'mysql' is alongside or in path.
-    # We will try the environment path first.
-    
-    mysql_bin = "/usr/local/mysql-9.5.0-macos15-x86_64/bin/mysql"
-    if not os.path.exists(mysql_bin):
-        mysql_bin = "mysql" # fallback to path
-    
-    # Use subprocess run to handle quoting better than os.system with backticks
-    # Backticks in shell mean execute, we want literal backticks for MySQL DB name
-    # Actually, mysql cli doesn't strictly need backticks on CLI arg if we redirect stdin
-    # But to be safe let's just use the string without backticks if possible or escape them
-    # Better yet, use subprocess.run with shell=True but formatted carefully
-    cmd = f"{mysql_bin} -u {DB_USER} -p'{DB_PASSWORD}' \"`{tenant_db_name}`\" < schema.sql"
-    # Actually, the issue is os.system interprets `...` as command execution.
-    # We should use subprocess to avoid shell injection confusion or just quote differently.
-    # Simple fix: Quote with \" and let mysql handle it? No, mysql CLI takes DB name as arg.
-    # Let's try passing the DB name without backticks to CLI but ensure valid chars.
-    # OR escape backticks: \` 
-    cmd = f"{mysql_bin} -u {DB_USER} -p'{DB_PASSWORD}' {tenant_db_name} < schema.sql"
-    # Wait, the failure was 'plotpro_test-corp: command not found' because I used ` ` in os.system
-    # The hyphen in DB name is fine for MySQL CLI if it's the specific argument, 
-    # but safeguards are good.
-    # Let's use simple string again but wrap in double quotes for shell: "{tenant_db_name}"
-    cmd = f"{mysql_bin} -u {DB_USER} -p'{DB_PASSWORD}' \"{tenant_db_name}\" < schema.sql"
+    # Locate mysql binary
+    mysql_bin = "mysql" # Default for Linux
+    if os.path.exists("/usr/local/mysql-9.5.0-macos15-x86_64/bin/mysql"):
+        mysql_bin = "/usr/local/mysql-9.5.0-macos15-x86_64/bin/mysql"
+
+    # Use absolute path for schema.sql
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    schema_path = os.path.join(base_dir, "schema.sql")
+
+    cmd = f"{mysql_bin} -u {DB_USER} -p'{DB_PASSWORD}' \"{tenant_db_name}\" < \"{schema_path}\""
     ret = os.system(cmd)
     if ret != 0:
         print("❌ Schema import failed. Check schema.sql and permissions.")

@@ -27,6 +27,8 @@ from email.mime.multipart import MIMEMultipart
 import json
 from pathlib import Path
 from urllib.parse import urlparse, quote as urlquote
+import requests
+from provision_tenant import provision_new_tenant
 import openpyxl
 import docx
 from docx.shared import Inches, Pt, RGBColor
@@ -530,6 +532,10 @@ def enforce_login():
     if getattr(g, 'subdomain', 'www') == 'www' and request.endpoint == 'index':
          return
     
+    # Allow Super Admin routes (they have their own auth)
+    if request.path.startswith('/superadmin'):
+        return
+
     # in some cases request.endpoint can be None (favicon or malformed); allow login then
     if request.endpoint is None:
         return None
@@ -648,6 +654,66 @@ def contact_lead():
     except Exception as e:
         print(f"Lead API Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+# --- Super Admin Routes ---
+
+@app.route("/superadmin/login", methods=["GET", "POST"])
+def superadmin_login():
+    if request.method == "POST":
+        password = request.form.get("password")
+        # Simple env-based auth
+        correct_pass = os.getenv("SUPER_ADMIN_PASSWORD", "plotpro_super_2024")
+        if password == correct_pass:
+            session["is_super_admin"] = True
+            return redirect(url_for("superadmin_dashboard"))
+        else:
+            flash("Invalid Password", "error")
+    
+    return render_template("superadmin_login.html")
+
+@app.route("/superadmin/logout")
+def superadmin_logout():
+    session.pop("is_super_admin", None)
+    return redirect(url_for("superadmin_login"))
+
+@app.route("/superadmin/dashboard", methods=["GET", "POST"])
+def superadmin_dashboard():
+    if not session.get("is_super_admin"):
+        return redirect(url_for("superadmin_login"))
+        
+    if request.method == "POST":
+        # Handle Tenant Creation
+        name = request.form.get("name")
+        subdomain = request.form.get("subdomain")
+        color = request.form.get("color", "#f16924")
+        
+        if not name or not subdomain:
+            flash("Name and Subdomain are required", "error")
+        else:
+            success = provision_new_tenant(name, subdomain, color)
+            if success:
+                flash(f"Tenant '{name}' created successfully! URL: http://{subdomain}.plotpro.in", "success")
+            else:
+                flash("Failed to create tenant. Check logs.", "error")
+    
+    # Fetch all tenants
+    master_conn = mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database="plotpro_master"
+    )
+    c = master_conn.cursor(dictionary=True)
+    c.execute("SELECT * FROM tenants ORDER BY created_at DESC")
+    tenants = c.fetchall()
+    
+    # Fetch all leads
+    c.execute("SELECT * FROM leads ORDER BY created_at DESC")
+    leads = c.fetchall()
+    
+    master_conn.close()
+    
+    return render_template("superadmin_dashboard.html", tenants=tenants, leads=leads)
 
 
 @app.route("/create", methods=["POST"])
