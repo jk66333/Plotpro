@@ -1307,7 +1307,8 @@
                         alert('Thanks! We received your request and will contact you shortly.');
                         document.getElementById('contactForm').reset();
                     } else {
-                        alert('Something went wrong. Please try again or call us directly.');
+                        // Show specific error if available
+                        alert('Error: ' + (data.error || 'Something went wrong.'));
                     }
                 })
                 .catch((error) => {
