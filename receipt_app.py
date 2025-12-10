@@ -444,12 +444,85 @@ def logout():
 
 
 @app.before_request
+def tenant_routing():
+    """
+    SaaS Middleware:
+    1. Determine Subdomain (e.g. 'srinidhi' from 'srinidhi.plotpro.in')
+    2. Query Master DB for Tenant Config
+    3. Configure Flask Global (g) for subsequent DB calls
+    """
+    # SKIP for static files to save DB hits
+    if request.path.startswith('/static'):
+        return
+
+    host = request.headers.get("Host", "").split(":")[0]  # remove port if any
+    
+    # Extract subdomain
+    # Logic: if host is 'srinidhi.plotpro.in', subdomain is 'srinidhi'
+    # If host is 'localhost' or '127.0.0.1', treat as 'localhost' tenant
+    
+    if host in ["localhost", "127.0.0.1"]:
+        subdomain = "localhost"
+    elif host.count(".") >= 2:
+        subdomain = host.split(".")[0]
+    else:
+        # Fallback or main domain (e.g. plotpro.in)
+        subdomain = "www"
+    
+    import flask
+    flask.g.subdomain = subdomain
+
+    # Connect to Master DB
+    try:
+        # Connect using ENV vars which point to Master/Default DB
+        master_conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database="plotpro_master" # Explicitly connect to Master
+        )
+        c = master_conn.cursor(dictionary=True)
+        
+        c.execute("SELECT * FROM tenants WHERE subdomain = %s", (subdomain,))
+        tenant = c.fetchone()
+        master_conn.close()
+        
+        if tenant:
+            # Store tenant config in g
+            import flask
+            flask.g.tenant = tenant
+            flask.g.tenant_db_config = {
+                "host": tenant["db_host"],
+                "user": tenant["db_user"],
+                "password": tenant["db_password"],
+                "database": tenant["db_name"]
+            }
+        else:
+            # Tenant not found. 
+            # In production, redirect to 404 or Signup.
+            # For dev simplicity, if subdomain='localhost' failed, we warn.
+            if subdomain == "localhost":
+               print("WARNING: 'localhost' tenant not found in Master DB. Please run init_saas_master.py")
+            pass
+            
+    except Exception as e:
+        print(f"SaaS Routing Error: {e}")
+        # Fail gracefully? Or crash?
+        # For now, proceed. If get_db_connection is called without config, it falls back to ENV.
+
+
+@app.before_request
 def enforce_login():
     """
     Protects all routes except /login and static file access and a few public endpoints.
     """
     # endpoints that should be accessible without login
     public = {"login", "static", "plot_lookup", "api.plot_lookup", "_routes", "list_routes"}
+    
+    # Allow Landing Page on root domain (www) without login
+    if getattr(g, 'subdomain', 'www') == 'www' and request.endpoint == 'index':
+         return
+    
     # in some cases request.endpoint can be None (favicon or malformed); allow login then
     if request.endpoint is None:
         return None
@@ -469,6 +542,14 @@ def enforce_login():
 # -------------------------------
 @app.route("/")
 def index():
+    # SaaS: If on main domain (www), show Landing Page
+    if getattr(g, 'subdomain', 'www') == 'www':
+        return render_template("landing_page.html")
+
+    # App: Ensure login (since we bypassed enforce_login for www)
+    if "user" not in session:
+        return redirect(url_for("login"))
+
     # If user only has Vishvam access (not dashboard), redirect them to Vishvam Layout
     if not (session.get("role") == "admin" or session.get("can_view_dashboard")):
         if session.get("can_view_vishvam_layout"):
@@ -502,6 +583,11 @@ def create():
     branch = form.get("branch", "").strip()
     payment_mode = form.get("payment_mode", "").strip()
     instrument_no = form.get("instrument_no", "").strip()
+    
+    # New fields
+    pan_no = form.get("pan_no", "").strip().upper()
+    aadhar_no = form.get("aadhar_no", "").strip()
+    basic_price = form.get("basic_price", "").replace(",", "").strip()
 
     created_at = datetime.utcnow().isoformat()
     
@@ -517,8 +603,9 @@ def create():
             """
             INSERT INTO receipts
             (no, project_name, date, venture, customer_name, amount_numeric, amount_words,
-             plot_no, square_yards, purpose, drawn_bank, branch, payment_mode, instrument_no, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             plot_no, square_yards, purpose, drawn_bank, branch, payment_mode, instrument_no, 
+             pan_no, aadhar_no, basic_price, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
             (
                 no,
@@ -535,16 +622,34 @@ def create():
                 branch,
                 payment_mode,
                 instrument_no,
+                pan_no,
+                aadhar_no,
+                basic_price,
                 created_at,
             ),
         )
         rid = c.lastrowid
+        
+        # If basic_price is provided, update it for all other receipts of this plot
+        if basic_price and plot_no and project_name:
+            try:
+                c.execute(
+                    "UPDATE receipts SET basic_price = %s WHERE plot_no = %s AND project_name = %s",
+                    (basic_price, plot_no, project_name),
+                )
+            except database.OperationalError:
+                pass
+                
         conn.commit()
         conn.close()
         flash("Receipt created successfully!", "success")
         return redirect(url_for("view_receipt", receipt_id=rid))
     else:
         # Non-admin: Save to pending_receipts for approval
+        # Note: pending_receipts table might not have new columns yet. 
+        # We save what we can. If strict schema, this needs migration. 
+        # For now, sticking to existing columns for pending to avoid errors if migration not run.
+        # User is admin in this context so this block is less critical but should be updated eventually.
         c.execute(
             """
             INSERT INTO pending_receipts

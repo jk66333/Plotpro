@@ -9,13 +9,37 @@ load_dotenv()
 __all__ = ['get_db_connection', 'fetch_one', 'fetch_all', 'IntegrityError', 'OperationalError', 'Error']
 
 
-def get_db_connection():
-    conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", ""),
-        database=os.getenv("DB_NAME", "receipt_app")
-    )
+def get_db_connection(config=None):
+    """
+    Establish a database connection.
+    Priority:
+    1. Explicit `config` argument.
+    2. Flask Global `g.tenant_db_config` (if valid request context).
+    3. Environment variables (Fallback/Default).
+    """
+    # Try to get config from Flask global context if not provided
+    if config is None:
+        try:
+            import flask
+            if flask.has_app_context() and hasattr(flask.g, 'tenant_db_config'):
+                config = flask.g.tenant_db_config
+        except ImportError:
+            pass
+
+    if config:
+        conn = mysql.connector.connect(
+            host=config.get("host", "localhost"),
+            user=config.get("user", "root"),
+            password=config.get("password", ""),
+            database=config.get("database", "")
+        )
+    else:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database=os.getenv("DB_NAME", "receipt_app")
+        )
     return conn
 
 class MySQLRow(dict):

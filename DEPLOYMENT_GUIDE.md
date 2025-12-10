@@ -2,16 +2,112 @@
 
 This guide provides step-by-step instructions to deploy the Receipt App on a fresh Ubuntu 22.04 Server.
 
-## 1. System Setup & Prerequisites
+## 🚀 PlotPro SaaS Production Deployment Guide
 
-First, update your system and install essential packages:
+**Target Server**: Ubuntu 22.04 LTS (2 Core / 8GB RAM)
+**Domain**: `plotpro.in`
+**IP Address**: `103.138.96.171`
+**SSH Port**: `7576`
 
+---
+
+## Phase 1: Global DNS Configuration (Crucial)
+Before touching the server, configure your Domain DNS Manager (GoDaddy/Namecheap/etc).
+You need TWO "A Records" to point to your VPS IP Address.
+
+| Type | Host | Value | Purpose |
+| :--- | :--- | :--- | :--- |
+| **A** | `@` | `103.138.96.171` | Points `plotpro.in` to server |
+| **A** | `*` | `103.138.96.171` | Points `client1.plotpro.in` (Wildcard) to server |
+
+*Note: Propagation takes 1-24 hours.*
+
+---
+
+## Phase 2: Server Provisioning
+1.  **SSH into your VPS** (Note specific port 7576):
+    ```bash
+    ssh -p 7576 root@103.138.96.171
+    # Password: 481vM9geY3EoHKi
+    ```
+
+2.  **Upload the Provisioning Script**:
+    (You can create this file on the server using nano)
+    ```bash
+    nano provision_vps.sh
+    # Paste the contents of 'provision_vps.sh' artifact here
+    # Ctrl+O to save, Ctrl+X to exit
+    chmod +x provision_vps.sh
+    ./provision_vps.sh
+    ```
+
+---
+
+## Phase 3: Application Setup
+1.  **Clone the Code**:
+    ```bash
+    mkdir -p /var/www/plotpro
+    # Upload your code here via SFTP or Git Clone
+    cd /var/www/plotpro
+    ```
+
+2.  **Install Python Deps**:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    pip install gunicorn
+    playwright install chromium
+    ```
+
+3.  **Database & Secrets**:
+    Create a `.env` file:
+    ```bash
+    nano .env
+    ```
+    Content:
+    ```ini
+    DB_HOST=localhost
+    DB_USER=root
+    DB_PASSWORD=your_secure_mysql_password
+    SECRET_KEY=generate_a_random_string_here
+    ```
+
+4.  **Initialize Master DB**:
+    ```bash
+    python init_saas_master.py
+    ```
+
+---
+
+## Phase 4: Web Server (Nginx + Gunicorn)
+1.  **Configure Nginx**:
+    Copy the `nginx_saas.conf` content to `/etc/nginx/sites-available/plotpro`
+    ```bash
+    ln -s /etc/nginx/sites-available/plotpro /etc/nginx/sites-enabled/
+    nginx -t
+    systemctl restart nginx
+    ```
+
+2.  **Run with Gunicorn (Background)**:
+    ```bash
+    gunicorn --workers 3 --bind 127.0.0.1:8000 receipt_app:app --daemon
+    ```
+
+---
+
+## Phase 5: SSL (HTTPS)
+Secure all subdomains:
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-pip python3-venv git mysql-server nginx curl
+certbot --nginx -d plotpro.in -d *.plotpro.in
 ```
+*(Note: Wildcard SSL typically requires a DNS Challenge. If Certbot fails, start with just `-d plotpro.in`)*
 
-## 2. Database Setup (MySQL)
+---
+
+**✅ Deployment Complete!**
+Visit `http://plotpro.in`.
+To test SaaS, run `python provision_tenant.py ...` on the server and visit the new subdomain. Setup (MySQL)
 
 Secure your MySQL installation and create the database:
 

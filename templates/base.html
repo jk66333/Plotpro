@@ -18,7 +18,13 @@
 
   <style>
     :root {
-      --brand: #f16924;
+      --brand: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+        }
+      }
+
+      ;
     }
 
     /* Professional Navigation Bar */
@@ -149,9 +155,10 @@
   <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid" style="max-width:1200px; margin:0 auto;">
       <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-        <!-- runtime src for browser, absolute path kept in data-local-logo for build tools -->
-        <img src="{{ url_for('static', filename='images/logo.png') }}"
-          data-local-logo="/Users/admin/receipt_app_project/static/images/logo.png" alt="Logo" class="logo-img">
+        <!-- Dynamic Logo for SaaS -->
+        <img
+          src="{{ g.tenant.logo_url if g.tenant and g.tenant.logo_url else url_for('static', filename='images/logo.png') }}"
+          alt="{{ g.tenant.name if g.tenant else 'App Logo' }}" class="logo-img">
       </a>
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
