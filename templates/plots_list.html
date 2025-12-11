@@ -3,7 +3,13 @@
 
 <style>
     :root {
-        --brand-primary: #f16924;
+        --brand-primary: {
+                {
+                g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+            }
+        }
+
+        ;
         --brand-secondary: #d85e1f;
     }
 

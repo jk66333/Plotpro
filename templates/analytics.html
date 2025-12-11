@@ -167,7 +167,7 @@
           height: 400,
           chartArea: { left: 60, top: 20, right: 20, bottom: 60 },
           hAxis: { slantedText: true, slantedTextAngle: 45 },
-          colors: ['#f16924']
+          colors: ['{{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else "#f16924" }}']
         });
 
         // Receipts: Amount by Project (Pie Chart)

@@ -3,7 +3,13 @@
 
 <style>
     :root {
-        --brand-primary: #f16924;
+        --brand-primary: {
+                {
+                g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+            }
+        }
+
+        ;
         --brand-secondary: #d85e1f;
     }
 
@@ -611,8 +617,9 @@
 
                     <div class="text-center mt-3">
                         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary"
-                            style="background: #f16924; color: white; border: none; padding: 0.75rem 2rem; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-block; transition: all 0.3s;"
-                            onmouseover="this.style.background='#d85e1f'" onmouseout="this.style.background='#f16924'">
+                            style="background: var(--brand-primary); color: white; border: none; padding: 0.75rem 2rem; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-block; transition: all 0.3s;"
+                            onmouseover="this.style.filter='brightness(90%)'"
+                            onmouseout="this.style.filter='brightness(100%)'">
                             <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
                         </a>
                     </div>
