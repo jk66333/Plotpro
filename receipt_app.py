@@ -75,6 +75,37 @@ def init_db():
     );
     """
     )
+    
+    # Create Users Table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(50) DEFAULT 'viewer',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+
+    # Create Commissions Table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS commissions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        plot_no VARCHAR(255),
+        agent_name VARCHAR(255),
+        mediator_name VARCHAR(255),
+        mediator_phone VARCHAR(255),
+        manager_name VARCHAR(255),
+        amount REAL,
+        cgm_amount REAL,
+        srgm_amount REAL,
+        gm_amount REAL,
+        dgm_amount REAL,
+        agm_amount REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    """)
+    
     conn.commit()
     conn.close()
     
