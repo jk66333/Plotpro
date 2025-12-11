@@ -18,7 +18,13 @@
 
   <style>
     :root {
-      --brand: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }};
+      --brand: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+        }
+      }
+
+      ;
     }
 
     /* Professional Navigation Bar */
@@ -89,9 +95,9 @@
 
     /* Button Styling */
     .btn-brand {
-      background: var(--brand);
+      background: var(--brand, #f16924);
       color: #fff;
-      border-color: var(--brand);
+      border-color: var(--brand, #f16924);
       font-weight: 600;
       padding: 0.5rem 1.25rem;
       border-radius: 6px;
