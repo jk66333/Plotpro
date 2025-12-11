@@ -48,18 +48,42 @@
     }
 
     .btn-brand {
-      background: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important;
+      background: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+        }
+      }
 
-      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important;
+      !important;
+
+      border-color: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+        }
+      }
+
+      !important;
       color: #fff !important;
       width: 100%;
       font-weight: 600;
     }
 
     .btn-brand:hover {
-      background: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f' }} !important;
+      background: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f'
+        }
+      }
 
-      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f' }} !important;
+      !important;
+
+      border-color: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f'
+        }
+      }
+
+      !important;
     }
 
     .flash {
@@ -117,9 +141,7 @@
       <button class="btn btn-brand" type="submit">Sign in</button>
     </form>
 
-    <div class="help">
-      Default login → <strong>admin / password123</strong>
-    </div>
+
 
   </div>
 
