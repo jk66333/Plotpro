@@ -44,7 +44,7 @@ def seed_data():
             ))
             
         c.executemany("""
-            INSERT INTO receipts (receipt_no, customer_name, project_name, plot_no, total_amount, date) 
+            INSERT INTO receipts (no, customer_name, project_name, plot_no, amount_numeric, date) 
             VALUES (%s, %s, %s, %s, %s, %s)
         """, receipts)
         print(f"✅ Added {len(receipts)} Receipts")
