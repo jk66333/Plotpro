@@ -17,7 +17,7 @@ def init_master_db():
         user=DB_USER,
         password=DB_PASSWORD
     )
-    c = conn.cursor()
+    c = conn.cursor(buffered=True)
 
     print("Creating plotpro_master database...")
     c.execute("CREATE DATABASE IF NOT EXISTS plotpro_master")
@@ -41,7 +41,6 @@ def init_master_db():
         db_host VARCHAR(255) DEFAULT 'localhost',
         
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
     );
     """)
 
