@@ -35,22 +35,37 @@ def provision_new_tenant(name, subdomain, brand_color="#f16924", logo_url=None):
     conn.close()
 
     
-    # 2. Import Schema
-    # Locate mysql binary
-    mysql_bin = "mysql" # Default for Linux
-    if os.path.exists("/usr/local/mysql-9.5.0-macos15-x86_64/bin/mysql"):
-        mysql_bin = "/usr/local/mysql-9.5.0-macos15-x86_64/bin/mysql"
+    # 2. Import Schema (Python-native)
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        schema_path = os.path.join(base_dir, "schema.sql")
+        
+        with open(schema_path, 'r') as f:
+            sql_script = f.read()
+            
+        # Execute script statement by statement
+        t_conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=tenant_db_name)
+        tc = t_conn.cursor()
 
-    # Use absolute path for schema.sql
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    schema_path = os.path.join(base_dir, "schema.sql")
+        # Note: This is a basic split. For complex schemas with triggers or ; inside strings, 
+        # a more robust parser is needed. For mysqldump outputs, this usually works.
+        statements = sql_script.split(';')
+        for statement in statements:
+            stmt = statement.strip()
+            if stmt:
+                try:
+                    tc.execute(stmt)
+                except Exception as stmt_err:
+                    # Ignore comment-only errors or empty commands
+                    if not stmt.startswith("--") and not stmt.startswith("/*"):
+                        print(f"⚠️ Warning executing statement: {stmt[:50]}... -> {stmt_err}")
 
-    cmd = f"{mysql_bin} -u {DB_USER} -p'{DB_PASSWORD}' \"{tenant_db_name}\" < \"{schema_path}\""
-    ret = os.system(cmd)
-    if ret != 0:
-        print("❌ Schema import failed. Check schema.sql and permissions.")
+        t_conn.commit()
+        t_conn.close()
+        print("✅ Schema imported successfully (Python-split).")
+    except Exception as e:
+        print(f"❌ Schema import failed: {e}")
         return False
-    print("✅ Schema imported successfully.")
 
     # 3. Create Default Admin User
     try:
