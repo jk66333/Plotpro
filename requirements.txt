@@ -8,3 +8,4 @@ playwright
 gunicorn
 pytest
 pytest-playwright
+requests
