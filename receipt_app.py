@@ -801,6 +801,7 @@ def update_tenant(tenant_id):
     if not session.get("is_super_admin"):
         return redirect(url_for("superadmin_login"))
         
+    name = request.form.get("name")
     subdomain = request.form.get("subdomain")
     color = request.form.get("color")
     
