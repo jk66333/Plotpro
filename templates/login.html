@@ -104,10 +104,15 @@
   <div class="login-card">
 
     <div class="brand">
-      <!-- Dynamic Logo for SaaS -->
-      <img
-        src="{{ url_for('static', filename=g.tenant.logo_url) if g.tenant and g.tenant.logo_url else url_for('static', filename='images/logo.png') }}"
-        alt="{{ g.tenant.name if g.tenant else 'App Logo' }}">
+      <!-- Dynamic Logo for SaaS: Show Logo if exists, else Show Name in plain text -->
+      {% if g.tenant and g.tenant.logo_url %}
+      <img src="{{ url_for('static', filename=g.tenant.logo_url) }}" alt="{{ g.tenant.name }}">
+      {% else %}
+      <h2
+        style="color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#444' }}; font-weight:700; margin:0;">
+        {{ g.tenant.name if g.tenant else "Receipt App" }}
+      </h2>
+      {% endif %}
     </div>
 
     <div class="form-title">Sign in</div>
@@ -140,7 +145,6 @@
 
       <button class="btn btn-brand" type="submit">Sign in</button>
     </form>
-
 
 
   </div>
