@@ -164,7 +164,7 @@
                 {% endif %}
                 {% endwith %}
 
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label>Company Name</label>
                         <input type="text" name="name" placeholder="e.g. Srinidhi Estates" required>
@@ -178,6 +178,11 @@
                     <div class="form-group">
                         <label>Brand Color</label>
                         <input type="color" name="color" value="#f16924" style="height: 50px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Company Logo (Optional)</label>
+                        <input type="file" name="logo" accept="image/*">
+                        <small style="color: #6b7280;">Upload a PNG/JPG file.</small>
                     </div>
                     <button type="submit" class="btn-primary">Provision Tenant</button>
                     <p style="text-align: center; margin-top: 1rem; color: #6b7280; font-size: 0.9rem;">
