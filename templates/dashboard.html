@@ -264,20 +264,19 @@
             All Projects Overview
             {% endif %}
           </p>
+        </div>
 
-          <div class="col-lg-6">
-            <form method="get" action="{{ url_for('dashboard') }}"
-              class="project-filter-wrapper justify-content-lg-end">
-              <label for="projectFilter" class="filter-label">Filter by Project:</label>
-              <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
-                style="max-width: 280px;">
-                <option value="">All Projects</option>
-                {% for proj in projects %}
-                <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}</option>
-                {% endfor %}
-              </select>
-            </form>
-          </div>
+        <div class="col-lg-6">
+          <form method="get" action="{{ url_for('dashboard') }}" class="project-filter-wrapper justify-content-lg-end">
+            <label for="projectFilter" class="filter-label">Filter by Project:</label>
+            <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
+              style="max-width: 280px;">
+              <option value="">All Projects</option>
+              {% for proj in projects %}
+              <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}</option>
+              {% endfor %}
+            </select>
+          </form>
         </div>
       </div>
 
