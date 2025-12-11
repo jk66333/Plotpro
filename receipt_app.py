@@ -715,6 +715,80 @@ def superadmin_dashboard():
     
     return render_template("superadmin_dashboard.html", tenants=tenants, leads=leads)
 
+@app.route("/superadmin/delete_tenant/<int:tenant_id>", methods=["POST"])
+def delete_tenant(tenant_id):
+    if not session.get("is_super_admin"):
+        return redirect(url_for("superadmin_login"))
+    
+    try:
+        master_conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database="plotpro_master"
+        )
+        c = master_conn.cursor(dictionary=True)
+        
+        # Get DB Name first
+        c.execute("SELECT db_name, name FROM tenants WHERE id=%s", (tenant_id,))
+        tenant = c.fetchone()
+        
+        if tenant:
+            # 1. Drop the Tenant Database (Crucial for cleanup)
+            # CAREFUL: This is destructive!
+            try:
+                c.execute(f"DROP DATABASE IF EXISTS `{tenant['db_name']}`")
+            except Exception as db_err:
+                print(f"Error dropping DB {tenant['db_name']}: {db_err}")
+                # Proceed to remove from master anyway
+            
+            # 2. Remove from Master
+            c.execute("DELETE FROM tenants WHERE id=%s", (tenant_id,))
+            master_conn.commit()
+            flash(f"Tenant '{tenant['name']}' and database deleted.", "success")
+        else:
+            flash("Tenant not found.", "error")
+            
+        master_conn.close()
+    except Exception as e:
+        flash(f"Error deleting tenant: {e}", "error")
+        
+    return redirect(url_for("superadmin_dashboard"))
+
+@app.route("/superadmin/update_tenant/<int:tenant_id>", methods=["POST"])
+def update_tenant(tenant_id):
+    if not session.get("is_super_admin"):
+        return redirect(url_for("superadmin_login"))
+        
+    name = request.form.get("name")
+    subdomain = request.form.get("subdomain")
+    color = request.form.get("color")
+    
+    try:
+        master_conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database="plotpro_master"
+        )
+        c = master_conn.cursor()
+        
+        # We allow changing subdomain. This maps New Subdomain -> Old DB Name.
+        # This effectively renames the site URL without moving data.
+        c.execute("""
+            UPDATE tenants 
+            SET name=%s, subdomain=%s, brand_color=%s 
+            WHERE id=%s
+        """, (name, subdomain, color, tenant_id))
+        
+        master_conn.commit()
+        master_conn.close()
+        flash(f"Tenant '{name}' updated successfully.", "success")
+    except Exception as e:
+        flash(f"Error updating tenant: {e}", "error")
+        
+    return redirect(url_for("superadmin_dashboard"))
+
 
 @app.route("/create", methods=["POST"])
 def create():
