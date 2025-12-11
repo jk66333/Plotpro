@@ -290,9 +290,11 @@
       </div>
 
       <!-- Management Snippets Section -->
-      <div class="mb-5 first-section-spacer">
-        <div class="section-header">
-          <h2 class="section-title">Management Snippets</h2>
+      <div class="mb-5 first-section-spacer" style="margin-top: 4rem;">
+        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
+          <h2 class="section-title"
+            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+            Management Snippets</h2>
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6">
@@ -390,8 +392,10 @@
 
       <!-- Plots Summary Section -->
       <div class="mb-5">
-        <div class="section-header">
-          <h2 class="section-title">Plots Summary</h2>
+        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
+          <h2 class="section-title"
+            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+            Plots Summary</h2>
         </div>
         <div class="row g-4">
           <div class="col-lg-3 col-md-6">
@@ -455,8 +459,10 @@
 
       <!-- Commission Management Section -->
       <div class="mb-5">
-        <div class="section-header">
-          <h2 class="section-title">Commission Management</h2>
+        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
+          <h2 class="section-title"
+            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+            Commission Management</h2>
         </div>
         <div class="row g-4">
           <div class="col-lg-6 col-md-6">
@@ -495,8 +501,10 @@
         <!-- Project Layouts Section -->
         {% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}
         <div class="col-lg-6">
-          <div class="section-header">
-            <h2 class="section-title">Project Layouts</h2>
+          <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
+            <h2 class="section-title"
+              style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+              Project Layouts</h2>
           </div>
           <div class="row g-4">
             {% if selected_project %}
@@ -544,8 +552,10 @@
         <!-- Mediator Performance Section -->
         <div
           class="{% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}col-lg-6{% else %}col-12{% endif %}">
-          <div class="section-header">
-            <h2 class="section-title">Mediator Performance</h2>
+          <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
+            <h2 class="section-title"
+              style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+              Mediator Performance</h2>
           </div>
           <div class="row g-4">
             <div class="col-12">
