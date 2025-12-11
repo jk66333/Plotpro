@@ -78,7 +78,7 @@ def provision_new_tenant(name, subdomain, brand_color="#f16924", logo_url=None):
         # Force a compatible method (PBKDF2) to avoid scrypt issues on some MacOS builds
         pass_hash = generate_password_hash(admin_pass, method='pbkdf2:sha256')
         
-        tc.execute("INSERT INTO users (username, password_hash, role, created_at) VALUES (%s, %s, 'admin', NOW())", 
+        tc.execute("INSERT INTO users (username, password_hash, role, can_view_dashboard, created_at) VALUES (%s, %s, 'admin', 1, NOW())", 
                    (admin_user, pass_hash))
         t_conn.commit()
         t_conn.close()
