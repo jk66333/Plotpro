@@ -48,42 +48,18 @@
     }
 
     .btn-brand {
-      background: {
-          {
-          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
-        }
-      }
+      background: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important;
 
-      !important;
-
-      border-color: {
-          {
-          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
-        }
-      }
-
-      !important;
+      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important;
       color: #fff !important;
       width: 100%;
       font-weight: 600;
     }
 
     .btn-brand:hover {
-      background: {
-          {
-          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f'
-        }
-      }
+      background: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f' }} !important;
 
-      !important;
-
-      border-color: {
-          {
-          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f'
-        }
-      }
-
-      !important;
+      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#d85e1f' }} !important;
     }
 
     .flash {
