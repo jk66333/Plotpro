@@ -263,8 +263,6 @@
 
     <!-- Page Header -->
     <div class="page-header">
-      <h1 style="color: red; font-size: 40px; border: 5px solid red; padding: 20px; text-align: center;">DEBUG: TRACER
-        V1 - IF YOU SEE THIS, UPDATE WORKED</h1>
       <div class="row align-items-center">
         <div class="col-lg-6 mb-3 mb-lg-0">
           <h1 class="page-title">Dashboard</h1>
@@ -280,8 +278,7 @@
         <div class="col-lg-6">
           <form method="get" action="{{ url_for('dashboard') }}" class="project-filter-wrapper justify-content-lg-end">
             <label for="projectFilter" class="filter-label">Filter by Project:</label>
-            <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()"
-              style="max-width: 280px;">
+            <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()">
               <option value="">All Projects</option>
               {% for proj in projects %}
               <option value="{{ proj }}" {% if selected_project==proj %}selected{% endif %}>{{ proj }}</option>
@@ -292,10 +289,9 @@
       </div>
 
       <!-- Management Snippets Section -->
-      <div class="mb-5 first-section-spacer" style="margin-top: 4rem;">
-        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
-          <h2 class="section-title"
-            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+      <div class="mb-5 first-section-spacer">
+        <div class="section-header">
+          <h2 class="section-title">
             Management Snippets</h2>
         </div>
         <div class="row g-4">
@@ -356,8 +352,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for('pending_receipts') }}" class="stat-card action-card card-orange"
-              style="position:relative;">
+            <a href="{{ url_for('pending_receipts') }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-hourglass-split"></i>
@@ -394,9 +389,8 @@
 
       <!-- Plots Summary Section -->
       <div class="mb-5">
-        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
-          <h2 class="section-title"
-            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+        <div class="section-header">
+          <h2 class="section-title">
             Plots Summary</h2>
         </div>
         <div class="row g-4">
@@ -461,9 +455,8 @@
 
       <!-- Commission Management Section -->
       <div class="mb-5">
-        <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
-          <h2 class="section-title"
-            style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+        <div class="section-header">
+          <h2 class="section-title">
             Commission Management</h2>
         </div>
         <div class="row g-4">
@@ -503,9 +496,8 @@
         <!-- Project Layouts Section -->
         {% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}
         <div class="col-lg-6">
-          <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
-            <h2 class="section-title"
-              style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+          <div class="section-header">
+            <h2 class="section-title">
               Project Layouts</h2>
           </div>
           <div class="row g-4">
@@ -554,15 +546,14 @@
         <!-- Mediator Performance Section -->
         <div
           class="{% if session.get('role') == 'admin' or session.get('can_view_vishvam_layout') %}col-lg-6{% else %}col-12{% endif %}">
-          <div class="section-header" style="border-bottom: 2px solid var(--brand-primary, #f16924) !important;">
-            <h2 class="section-title"
-              style="border-bottom: 3px solid var(--brand-primary, #f16924) !important; display: inline-block; padding-bottom: 5px;">
+          <div class="section-header">
+            <h2 class="section-title">
               Mediator Performance</h2>
           </div>
           <div class="row g-4">
             <div class="col-12">
               <a href="{{ url_for('mediator_performance', project=selected_project) if selected_project else url_for('mediator_performance') }}"
-                class="stat-card card-teal action-card" style="text-decoration: none;">
+                class="stat-card card-teal action-card">
                 <div class="card-header-section">
                   <div class="card-icon">
                     <i class="bi bi-trophy"></i>
