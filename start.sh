@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 # Start Gunicorn in Background
 echo "Starting Gunicorn..."
-gunicorn --workers 3 --bind 127.0.0.1:8000 receipt_app:app --daemon
+gunicorn --workers 3 --bind 127.0.0.1:8000 receipt_app:app --daemon --access-logfile server.log --error-logfile server.log --capture-output
 
 # Check if it is running
 sleep 2

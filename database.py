@@ -27,6 +27,7 @@ def get_db_connection(config=None):
             pass
 
     if config:
+        print(f"DEBUG: Connecting to Tenant DB: {config.get('database')}")
         conn = mysql.connector.connect(
             host=config.get("host", "localhost"),
             user=config.get("user", "root"),
@@ -34,6 +35,7 @@ def get_db_connection(config=None):
             database=config.get("database", "")
         )
     else:
+        print(f"DEBUG: Connecting to DEFAULT DB: {os.getenv('DB_NAME', 'receipt_app')}")
         conn = mysql.connector.connect(
             host=os.getenv("DB_HOST", "localhost"),
             user=os.getenv("DB_USER", "root"),
