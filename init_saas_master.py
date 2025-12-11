@@ -42,7 +42,19 @@ def init_master_db():
         
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+    );
     """)
+
+    # --- Migration: Add logo_url if not exists ---
+    # (Since CREATE TABLE IF NOT EXISTS won't add new columns to existing tables)
+    try:
+        c.execute("SHOW COLUMNS FROM tenants LIKE 'logo_url'")
+        if not c.fetchone():
+            print("Adding missing column 'logo_url' to tenants...")
+            c.execute("ALTER TABLE tenants ADD COLUMN logo_url VARCHAR(500)")
+            conn.commit()
+    except Exception as e:
+        print(f"Migration warning: {e}")
 
     print("Creating leads table...")
     c.execute("""

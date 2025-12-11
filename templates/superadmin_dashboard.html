@@ -299,7 +299,7 @@
             <button onclick="document.getElementById('editModal').style.display='none'"
                 style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
             <h2>Edit Tenant</h2>
-            <form id="editForm" method="POST">
+            <form id="editForm" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Company Name</label>
                     <input type="text" id="editName" name="name" required>
@@ -312,6 +312,11 @@
                 <div class="form-group">
                     <label>Brand Color</label>
                     <input type="color" id="editColor" name="color" style="height: 50px;">
+                </div>
+                <div class="form-group">
+                    <label>Company Logo (Optional)</label>
+                    <input type="file" name="logo" accept="image/*">
+                    <small style="color: #6b7280;">Upload a PNG/JPG file.</small>
                 </div>
                 <button type="submit" class="btn-primary">Save Changes</button>
             </form>

@@ -714,7 +714,24 @@ def superadmin_dashboard():
         if not name or not subdomain:
             flash("Name and Subdomain are required", "error")
         else:
-            success = provision_new_tenant(name, subdomain, color)
+            # Handle Logo Upload
+            logo_rel_path = None
+            if 'logo' in request.files:
+                file = request.files['logo']
+                if file and file.filename:
+                    # Ensure directory exists
+                    logo_dir = os.path.join(app.root_path, "static", "logos")
+                    os.makedirs(logo_dir, exist_ok=True)
+                    
+                    # Generate unique filename
+                    from werkzeug.utils import secure_filename
+                    import time
+                    original_name = secure_filename(file.filename)
+                    unique_name = f"{int(time.time())}_{original_name}"
+                    file.save(os.path.join(logo_dir, unique_name))
+                    logo_rel_path = f"logos/{unique_name}"
+
+            success = provision_new_tenant(name, subdomain, color, logo_url=logo_rel_path)
             if success:
                 flash(f"Tenant '{name}' created successfully! URL: http://{subdomain}.plotpro.in", "success")
             else:
@@ -784,9 +801,23 @@ def update_tenant(tenant_id):
     if not session.get("is_super_admin"):
         return redirect(url_for("superadmin_login"))
         
-    name = request.form.get("name")
     subdomain = request.form.get("subdomain")
     color = request.form.get("color")
+    
+    # Handle Logo Upload
+    logo_rel_path = None
+    if 'logo' in request.files:
+        file = request.files['logo']
+        if file and file.filename:
+            logo_dir = os.path.join(app.root_path, "static", "logos")
+            os.makedirs(logo_dir, exist_ok=True)
+            
+            from werkzeug.utils import secure_filename
+            import time
+            original_name = secure_filename(file.filename)
+            unique_name = f"{int(time.time())}_{original_name}"
+            file.save(os.path.join(logo_dir, unique_name))
+            logo_rel_path = f"logos/{unique_name}"
     
     try:
         master_conn = mysql.connector.connect(
@@ -799,11 +830,18 @@ def update_tenant(tenant_id):
         
         # We allow changing subdomain. This maps New Subdomain -> Old DB Name.
         # This effectively renames the site URL without moving data.
-        c.execute("""
-            UPDATE tenants 
-            SET name=%s, subdomain=%s, brand_color=%s 
-            WHERE id=%s
-        """, (name, subdomain, color, tenant_id))
+        
+        sql = "UPDATE tenants SET name=%s, subdomain=%s, brand_color=%s"
+        params = [name, subdomain, color]
+        
+        if logo_rel_path:
+            sql += ", logo_url=%s"
+            params.append(logo_rel_path)
+            
+        sql += " WHERE id=%s"
+        params.append(tenant_id)
+        
+        c.execute(sql, tuple(params))
         
         master_conn.commit()
         master_conn.close()

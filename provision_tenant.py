@@ -14,7 +14,7 @@ DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 
-def provision_new_tenant(name, subdomain, brand_color="#f16924"):
+def provision_new_tenant(name, subdomain, brand_color="#f16924", logo_url=None):
     """
     1. Create new DB `plotpro_<subdomain>`
     2. Import schema.sql
@@ -82,9 +82,9 @@ def provision_new_tenant(name, subdomain, brand_color="#f16924"):
             print("⚠️  Tenant already exists in Master DB. Skipping insert.")
         else:
             mc.execute("""
-                INSERT INTO tenants (name, subdomain, brand_color, db_name, db_user, db_password, db_host)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (name, subdomain, brand_color, tenant_db_name, DB_USER, DB_PASSWORD, DB_HOST))
+                INSERT INTO tenants (name, subdomain, brand_color, logo_url, db_name, db_user, db_password, db_host)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (name, subdomain, brand_color, logo_url, tenant_db_name, DB_USER, DB_PASSWORD, DB_HOST))
             m_conn.commit()
             print("✅ Tenant registered in Master DB.")
         m_conn.close()
