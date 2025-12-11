@@ -273,7 +273,7 @@
         </div>
 
         <div class="col-lg-6">
-          <form method="get" action="{{ url_for(" dashboard") }}" class="project-filter-wrapper justify-content-lg-end">
+          <form method="get" action="{{ url_for('dashboard') }}" class="project-filter-wrapper justify-content-lg-end">
             <label for="projectFilter" class="filter-label">Filter by Project:</label>
             <select name="project" id="projectFilter" class="form-select" onchange="this.form.submit()">
               <option value="">All Projects</option>
