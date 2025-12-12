@@ -3298,26 +3298,36 @@ def raw_commission_pdf(commission_id, filename):
     
     # Create calculations dict
     calculations = {
-        'total_amount': commission_data.get('total_amount', 0),
-        'w_value': commission_data.get('w_value', 0),
-        'b_value': commission_data.get('b_value', 0),
-        'balance_amount': commission_data.get('balance_amount', 0),
-        'actual_agreement_amount': commission_data.get('actual_agreement_amount', 0),
-        'agreement_balance': commission_data.get('agreement_balance', 0),
-        'mediator_amount': commission_data.get('mediator_amount', 0),
-        'mediator_deduction': commission_data.get('mediator_deduction', 0),
-        'mediator_actual_payment': commission_data.get('mediator_actual_payment', 0),
-        'mediator_at_agreement': commission_data.get('mediator_at_agreement', 0),
-        'cgm_total': commission_data.get('cgm_total', 0),
-        'cgm_at_agreement': commission_data.get('cgm_at_agreement', 0),
-        'cgm_at_registration': commission_data.get('cgm_at_registration', 0),
-        'srgm_total': commission_data.get('srgm_total', 0),
-        'srgm_at_agreement': commission_data.get('srgm_at_agreement', 0),
-        'srgm_at_registration': commission_data.get('srgm_at_registration', 0),
-        'gm_total': commission_data.get('gm_total', 0),
-        'gm_at_agreement': commission_data.get('gm_at_agreement', 0),
-        'gm_at_registration': commission_data.get('gm_at_registration', 0),
+        'total_amount': commission_data.get('total_amount') or 0,
+        'w_value': commission_data.get('w_value') or 0,
+        'b_value': commission_data.get('b_value') or 0,
+        'balance_amount': commission_data.get('balance_amount') or 0,
+        'actual_agreement_amount': commission_data.get('actual_agreement_amount') or 0,
+        'agreement_balance': commission_data.get('agreement_balance') or 0,
+        'mediator_amount': commission_data.get('mediator_amount') or 0,
+        'mediator_deduction': commission_data.get('mediator_deduction') or 0,
+        'mediator_actual_payment': commission_data.get('mediator_actual_payment') or 0,
+        'mediator_at_agreement': commission_data.get('mediator_at_agreement') or 0,
+        
+        'cgm_total': commission_data.get('cgm_total') or 0,
+        'cgm_at_agreement': commission_data.get('cgm_at_agreement') or 0,
+        'cgm_at_registration': commission_data.get('cgm_at_registration') or 0,
+        
+        'srgm_total': commission_data.get('srgm_total') or 0,
+        'srgm_at_agreement': commission_data.get('srgm_at_agreement') or 0,
+        'srgm_at_registration': commission_data.get('srgm_at_registration') or 0,
+        
+        'gm_total': commission_data.get('gm_total') or 0,
+        'gm_at_agreement': commission_data.get('gm_at_agreement') or 0,
+        'gm_at_registration': commission_data.get('gm_at_registration') or 0,
 
+        'dgm_total': commission_data.get('dgm_total') or 0,
+        'dgm_at_agreement': commission_data.get('dgm_at_agreement') or 0,
+        'dgm_at_registration': commission_data.get('dgm_at_registration') or 0,
+
+        'agm_total': commission_data.get('agm_total') or 0,
+        'agm_at_agreement': commission_data.get('agm_at_agreement') or 0,
+        'agm_at_registration': commission_data.get('agm_at_registration') or 0,
     }
     
     # Generate PDF using existing function
