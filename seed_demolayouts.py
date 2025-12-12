@@ -161,7 +161,7 @@ def seed_data():
                 amc_charges,
                 cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_rate,
                 cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
-                agent_total, cgm_name, srgm_name, gm_name, dgm_name, agm_name
+                agent_rate, cgm_name, srgm_name, gm_name, dgm_name, agm_name
             ))
             
             commission_id = c.lastrowid
