@@ -100,6 +100,7 @@ def seed_data():
             advance_received = 200000
             agreement_percentage = 25.0
             amount_paid_at_agreement = total_amount * 0.25
+            amc_charges = 0 # Requested by user
             
             balance_amount = total_amount - amount_paid_at_agreement # Simplified logic
             
@@ -125,58 +126,68 @@ def seed_data():
             agm_total = agm_rate * sq_yards
             agent_total = agent_rate * sq_yards
             
-            # --- Generate Names ---
+            # --- Generate Names (Single strings for Main Table) ---
+            # Usually strict single mapping for this seed data
             cgm_name = f"CGM User {random.randint(1,2)}"
+            srgm_name = "SRGM User 1"
+            gm_name = f"GM User {random.randint(1,2)}"
+            dgm_name = f"DGM User {random.randint(1,3)}"
+            agm_name = f"AGM User {random.randint(1,5)}"
+            agent_name = f"Broker {plot_no}"
 
-            # --- Insert Parent Commission (With cgm_name) ---
+            # --- Insert Parent Commission (With ALL Names + AMC Charges) ---
             c.execute("""
                 INSERT INTO commissions (
                     plot_no, project_name, sq_yards, 
                     original_price, negotiated_price, 
                     advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
+                    amc_charges,
                     cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_commission_rate,
                     cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
-                    broker_commission, cgm_name
+                    broker_commission, cgm_name, srgm_name, gm_name, dgm_name, agm_name
                 ) VALUES (
                     %s, %s, %s,
                     %s, %s,
                     %s, %s, %s, %s, %s,
+                    %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
-                    %s, %s
+                    %s, %s, %s, %s, %s, %s
                 )
             """, (
                 plot_no, project_name, sq_yards,
                 original_price, negotiated_price,
                 advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
+                amc_charges,
                 cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_rate,
                 cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
-                agent_total, cgm_name
+                agent_total, cgm_name, srgm_name, gm_name, dgm_name, agm_name
             ))
             
             commission_id = c.lastrowid
 
             # --- Insert Entries (Child Tables for Multi-Entry Roles) ---
+            # Using the SAME names as generated above
             
             # 1. Agent
             c.execute("INSERT INTO commission_agent_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
-                      (commission_id, f"Broker {plot_no}", agent_total))
+                      (commission_id, agent_name, agent_total))
             
             # 2. AGM
             c.execute("INSERT INTO commission_agm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
-                      (commission_id, f"AGM User {random.randint(1,5)}", agm_total))
+                      (commission_id, agm_name, agm_total))
             
             # 3. DGM
             c.execute("INSERT INTO commission_dgm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
-                      (commission_id, f"DGM User {random.randint(1,3)}", dgm_total))
+                      (commission_id, dgm_name, dgm_total))
             
             # 4. GM
             c.execute("INSERT INTO commission_gm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
-                      (commission_id, f"GM User {random.randint(1,2)}", gm_total))
+                      (commission_id, gm_name, gm_total))
             
             # 5. SRGM
             c.execute("INSERT INTO commission_srgm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
-                      (commission_id, f"SRGM User 1", srgm_total))
+                      (commission_id, srgm_name, srgm_total))
 
         print(f"✅ Generated Commissions for {len(receipts_fetched)} plots")
         
