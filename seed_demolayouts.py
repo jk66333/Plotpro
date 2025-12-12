@@ -102,6 +102,12 @@ def seed_data():
             amount_paid_at_agreement = total_amount * agreement_percentage
             amc_charges = 0 # Requested by user
             
+            # --- Additional Field Calculations ---
+            w_value = sq_yards * 5500
+            b_value = total_amount - w_value
+            actual_agreement_amount = total_amount * agreement_percentage
+            agreement_balance = actual_agreement_amount - amount_paid_at_agreement - advance_received
+            
             balance_amount = total_amount - amount_paid_at_agreement # Simplified logic
             
             # --- Commission Rates (Constraints) ---
@@ -135,13 +141,14 @@ def seed_data():
             agm_name = f"AGM User {random.randint(1,5)}"
             agent_name = f"Broker {plot_no}"
 
-            # --- Insert Parent Commission (With ALL Names + AMC Charges) ---
+            # --- Insert Parent Commission (With ALL Names + AMC Charges + W/B Values) ---
             c.execute("""
                 INSERT INTO commissions (
                     plot_no, project_name, sq_yards, 
                     original_price, negotiated_price, 
                     advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
                     amc_charges,
+                    w_value, b_value, actual_agreement_amount, agreement_balance,
                     cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_commission_rate,
                     cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
                     broker_commission, cgm_name, srgm_name, gm_name, dgm_name, agm_name
@@ -150,6 +157,7 @@ def seed_data():
                     %s, %s,
                     %s, %s, %s, %s, %s,
                     %s,
+                    %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s
@@ -159,6 +167,7 @@ def seed_data():
                 original_price, negotiated_price,
                 advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
                 amc_charges,
+                w_value, b_value, actual_agreement_amount, agreement_balance,
                 cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_rate,
                 cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
                 agent_rate, cgm_name, srgm_name, gm_name, dgm_name, agm_name
