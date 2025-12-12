@@ -124,8 +124,11 @@ def seed_data():
             dgm_total = dgm_rate * sq_yards
             agm_total = agm_rate * sq_yards
             agent_total = agent_rate * sq_yards
+            
+            # --- Generate Names ---
+            cgm_name = f"CGM User {random.randint(1,2)}"
 
-            # --- Insert Parent Commission ---
+            # --- Insert Parent Commission (With cgm_name) ---
             c.execute("""
                 INSERT INTO commissions (
                     plot_no, project_name, sq_yards, 
@@ -133,14 +136,14 @@ def seed_data():
                     advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
                     cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_commission_rate,
                     cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
-                    broker_commission
+                    broker_commission, cgm_name
                 ) VALUES (
                     %s, %s, %s,
                     %s, %s,
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
-                    %s
+                    %s, %s
                 )
             """, (
                 plot_no, project_name, sq_yards,
@@ -148,12 +151,12 @@ def seed_data():
                 advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
                 cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_rate,
                 cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
-                agent_total # broker_commission usually tracks the total payout to broker
+                agent_total, cgm_name
             ))
             
             commission_id = c.lastrowid
 
-            # --- Insert Entries (Child Tables) ---
+            # --- Insert Entries (Child Tables for Multi-Entry Roles) ---
             
             # 1. Agent
             c.execute("INSERT INTO commission_agent_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
