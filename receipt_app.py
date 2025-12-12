@@ -4802,8 +4802,20 @@ def save_plot_mapping():
 
 
 # -----------------------------
-# Debug route
-# -----------------------------
+
+@app.route("/debug-logs")
+def view_debug_logs():
+    if not session.get("role") == "admin":
+        return "Access Denied", 403
+    try:
+        import os
+        templates = os.listdir('templates') if os.path.exists('templates') else ['Templates Dir Missing']
+        with open("server.log", "r") as f:
+            lines = f.readlines()[-50:]
+        return "<pre>TEMPLATES:\n" + "\n".join(templates) + "\n\nLOGS:\n" + "".join(lines) + "</pre>"
+    except Exception as e:
+        return f"Error: {e}"
+
 @app.route("/_routes")
 def list_routes():
     rules = []
@@ -5226,5 +5238,6 @@ if __name__ == "__main__":
     init_db()
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     os.makedirs(os.path.join("static", "css"), exist_ok=True)
-    app.run(debug=True, port=5000)
-
+    # Run the app
+    # SaaS: In production this is handled by Gunicorn usage in start.sh
+    app.run(debug=True)
