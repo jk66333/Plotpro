@@ -3,13 +3,7 @@
 
 <style>
     :root {
-        --brand-primary: {
-                {
-                g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
-            }
-        }
-
-        ;
+        --brand-primary: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }};
         --brand-secondary: #d85e1f;
     }
 
@@ -94,7 +88,7 @@
         font-weight: 800;
         color: #212529;
         margin-bottom: 0.5rem;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     .card-blue .metric-icon {
@@ -150,7 +144,6 @@
 <div class="page-wrapper">
     <div class="container">
 
-        <!-- Page Header -->
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-3 mb-lg-0">
@@ -164,7 +157,7 @@
                     </p>
                 </div>
                 <div class="col-lg-6">
-                    <form method="get" action="{{ url_for('account_summary') }}"
+                    <form method="get" action="{{ url_for("account_summary") }}"
                         class="d-flex align-items-center gap-3 justify-content-lg-end">
                         <label for="projectFilter" class="fw-semibold text-secondary mb-0 text-nowrap">Filter by
                             Project:</label>
@@ -181,7 +174,6 @@
             </div>
         </div>
 
-        <!-- Metrics Grid -->
         <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
                 <div class="metric-card card-blue">
@@ -224,9 +216,8 @@
             </div>
         </div>
 
-        <!-- Back Button -->
         <div class="text-center mt-5">
-            <a href="{{ url_for('dashboard', project=selected_project) if selected_project else url_for('dashboard') }}"
+            <a href="{{ url_for("dashboard", project=selected_project) if selected_project else url_for("dashboard") }}"
                 class="btn-back">
                 <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
             </a>
