@@ -34,6 +34,7 @@ import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from werkzeug.security import generate_password_hash, check_password_hash
+import psutil # For server health monitoring
 
 # Playwright will be imported lazily; if missing, we show a helpful message at runtime.
 try:
@@ -132,6 +133,18 @@ def migrate_commissions_table():
         c.execute("ALTER TABLE commissions ADD COLUMN project_name TEXT")
     if 'commission_breakdown' not in existing_columns:
         c.execute("ALTER TABLE commissions ADD COLUMN commission_breakdown TEXT")
+
+    # Add calculated financial fields if missing
+    if 'w_value' not in existing_columns:
+        c.execute("ALTER TABLE commissions ADD COLUMN w_value DOUBLE DEFAULT 0")
+    if 'b_value' not in existing_columns:
+        c.execute("ALTER TABLE commissions ADD COLUMN b_value DOUBLE DEFAULT 0")
+    if 'balance_amount' not in existing_columns:
+        c.execute("ALTER TABLE commissions ADD COLUMN balance_amount DOUBLE DEFAULT 0")
+    if 'actual_agreement_amount' not in existing_columns:
+        c.execute("ALTER TABLE commissions ADD COLUMN actual_agreement_amount DOUBLE DEFAULT 0")
+    if 'agreement_balance' not in existing_columns:
+        c.execute("ALTER TABLE commissions ADD COLUMN agreement_balance DOUBLE DEFAULT 0")
     
     conn.commit()
     conn.close()
@@ -5289,6 +5302,38 @@ def bulk_delete_plots():
         app.logger.error(f"Bulk plot delete error: {e}")
         
     return redirect(request.referrer)
+
+
+# -----------------------------
+# Server Health Dashboard (Super Admin)
+# -----------------------------
+@app.route("/superadmin/server-health")
+def server_health_dashboard():
+    """View Server Metrics (CPU/RAM/Disk)"""
+    if not session.get("is_super_admin"):
+         # Optionally allow normal admin too if needed, but safe to restrict
+        if not session.get("role") == "admin":
+             return redirect(url_for('login'))
+    
+    return render_template("server_health.html")
+
+@app.route("/api/server-stats")
+def api_server_stats():
+    """Return real-time server metrics JSON"""
+    if not (session.get("is_super_admin") or session.get("role") == "admin"):
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    try:
+        cpu = psutil.cpu_percent(interval=None) # Non-blocking
+        ram = psutil.virtual_memory().percent
+        disk = psutil.disk_usage('/').percent
+        return jsonify({
+            "cpu": cpu,
+            "ram": ram,
+            "disk": disk
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     init_db()
