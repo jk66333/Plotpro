@@ -3310,11 +3310,27 @@ def raw_commission_pdf(commission_id, filename):
         
         # JS: const bValue = totalAmount - wValue;
         calc_b_value = calc_total_amount - calc_w_value
+        
+        # JS: const balanceAmount = totalAmount - advanceReceived;
+        advance_received = float(commission_data.get('advance_received') or 0)
+        calc_balance_amount = calc_total_amount - advance_received
+        
+        # JS: const actualAgreementAmount = totalAmount * agreementPercentage;
+        agreement_percentage = float(commission_data.get('agreement_percentage') or 0)
+        calc_actual_agreement_amount = calc_total_amount * agreement_percentage
+        
+        # JS: const agreementBalance = actualAgreementAmount - amountPaidAtAgreement - advanceReceived;
+        amount_paid_at_agreement = float(commission_data.get('amount_paid_at_agreement') or 0)
+        calc_agreement_balance = calc_actual_agreement_amount - amount_paid_at_agreement - advance_received
+        
     except Exception as e:
         app.logger.error(f"Error calculating fallbacks: {e}")
         calc_total_amount = 0
         calc_w_value = 0
         calc_b_value = 0
+        calc_balance_amount = 0
+        calc_actual_agreement_amount = 0
+        calc_agreement_balance = 0
 
     def get_val_or_fallback(key, fallback):
         val = commission_data.get(key)
@@ -3331,9 +3347,9 @@ def raw_commission_pdf(commission_id, filename):
         'total_amount': get_val_or_fallback('total_amount', calc_total_amount),
         'w_value': get_val_or_fallback('w_value', calc_w_value),
         'b_value': get_val_or_fallback('b_value', calc_b_value),
-        'balance_amount': commission_data.get('balance_amount') or 0,
-        'actual_agreement_amount': commission_data.get('actual_agreement_amount') or 0,
-        'agreement_balance': commission_data.get('agreement_balance') or 0,
+        'balance_amount': get_val_or_fallback('balance_amount', calc_balance_amount),
+        'actual_agreement_amount': get_val_or_fallback('actual_agreement_amount', calc_actual_agreement_amount),
+        'agreement_balance': get_val_or_fallback('agreement_balance', calc_agreement_balance),
         'mediator_amount': commission_data.get('mediator_amount') or 0,
         'mediator_deduction': commission_data.get('mediator_deduction') or 0,
         'mediator_actual_payment': commission_data.get('mediator_actual_payment') or 0,
