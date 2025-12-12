@@ -2,7 +2,6 @@
 import mysql.connector
 import os
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash
 import datetime
 import random
 
@@ -17,13 +16,20 @@ def seed_data():
             password=os.getenv("DB_PASSWORD", ""),
             database="plotpro_demolayouts"
         )
-        c = conn.cursor()
-        
+        c = conn.cursor(dictionary=True)
+
+        # ---------------------------------------------------------
         # 1. Clear existing data
+        # ---------------------------------------------------------
+        print("Cleaning up old data...")
+        c.execute("DELETE FROM commission_agent_entries") # Just in case
+        c.execute("DELETE FROM commissions") # Cascades to all entries tables
         c.execute("DELETE FROM receipts")
         c.execute("DELETE FROM projects")
         
+        # ---------------------------------------------------------
         # 2. Insert Projects
+        # ---------------------------------------------------------
         projects = [
             ("Sunflower Gardens", 150, 20),
             ("Green Valley", 60, 5),
@@ -32,32 +38,144 @@ def seed_data():
         c.executemany("INSERT INTO projects (name, total_plots, plots_to_landowners) VALUES (%s, %s, %s)", projects)
         print(f"✅ Added {len(projects)} Projects")
         
+        # ---------------------------------------------------------
         # 3. Create Receipts (Simulate Sold Plots)
-        receipts = []
+        # ---------------------------------------------------------
+        receipt_data = []
         payment_modes = ["CASH", "Online Transfer", "Cheque"]
         
-        for i in range(1, 46): # Increased to 45 receipts for better data density
+        for i in range(1, 46): # 45 Receipts
             basic_price = random.randint(15000, 25000)
             sq_yards = random.randint(180, 250)
             payment_mode = random.choice(payment_modes)
+            project = "Sunflower Gardens" if i <= 25 else "Green Valley"
+            plot_no = str(i)
             
-            receipts.append((
+            # Store for receipt insertion
+            receipt_data.append((
                 f"REC-{i:03d}",
                 f"Customer {i}",
-                "Sunflower Gardens" if i <= 25 else "Green Valley",
-                f"{i}", # Plot No
-                120000,
+                project,
+                plot_no,
+                120000, # amount_numeric (generic placeholder or part payment)
                 datetime.date.today() - datetime.timedelta(days=i),
-                str(basic_price), # basic_price is varchar in schema
-                str(sq_yards),    # square_yards is varchar in schema
+                str(basic_price),
+                str(sq_yards),
                 payment_mode
             ))
-            
+
         c.executemany("""
             INSERT INTO receipts (no, customer_name, project_name, plot_no, amount_numeric, date, basic_price, square_yards, payment_mode) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, receipts)
-        print(f"✅ Added {len(receipts)} Receipts with random Price/Area/Payment data")
+        """, receipt_data)
+        print(f"✅ Added {len(receipt_data)} Receipts")
+        conn.commit()
+
+        # ---------------------------------------------------------
+        # 4. Generate Commissions for these Receipts
+        # ---------------------------------------------------------
+        print("Generating Commission Data...")
+        
+        # Fetch the receipts we just inserted to ensure consistency
+        c.execute("SELECT plot_no, project_name, basic_price, square_yards FROM receipts")
+        receipts_fetched = c.fetchall()
+        
+        for r in receipts_fetched:
+            # Parse data
+            try:
+                plot_no = r['plot_no']
+                project_name = r['project_name']
+                basic_price = float(r['basic_price'])
+                sq_yards = float(r['square_yards'])
+            except:
+                continue # Skip if bad data
+
+            # --- Financials ---
+            original_price = basic_price
+            # Negotiated Price >= 700. Let's make it slightly less than original (discount)
+            discount = random.randint(0, 1000)
+            negotiated_price = max(700, original_price - discount)
+            
+            total_amount = sq_yards * negotiated_price
+            advance_received = 200000
+            agreement_percentage = 25.0
+            amount_paid_at_agreement = total_amount * 0.25
+            
+            balance_amount = total_amount - amount_paid_at_agreement # Simplified logic
+            
+            # --- Commission Rates (Constraints) ---
+            # CGM <= 500
+            cgm_rate = random.randint(100, 500)
+            # GM <= 200
+            gm_rate = random.randint(50, 200)
+            # DGM <= 200
+            dgm_rate = random.randint(50, 200)
+            # AGM <= 1400
+            agm_rate = random.randint(500, 1400)
+            # Broker (Agent) = 2300 Default
+            agent_rate = 2300
+            # SRGM (Not specified, pick reasonable)
+            srgm_rate = random.randint(50, 300)
+
+            # --- Calculate Totals ---
+            cgm_total = cgm_rate * sq_yards
+            srgm_total = srgm_rate * sq_yards
+            gm_total = gm_rate * sq_yards
+            dgm_total = dgm_rate * sq_yards
+            agm_total = agm_rate * sq_yards
+            agent_total = agent_rate * sq_yards
+
+            # --- Insert Parent Commission ---
+            c.execute("""
+                INSERT INTO commissions (
+                    plot_no, project_name, sq_yards, 
+                    original_price, negotiated_price, 
+                    advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
+                    cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_commission_rate,
+                    cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
+                    broker_commission
+                ) VALUES (
+                    %s, %s, %s,
+                    %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s,
+                    %s
+                )
+            """, (
+                plot_no, project_name, sq_yards,
+                original_price, negotiated_price,
+                advance_received, agreement_percentage, amount_paid_at_agreement, total_amount, balance_amount,
+                cgm_rate, srgm_rate, gm_rate, dgm_rate, agm_rate, agent_rate,
+                cgm_total, srgm_total, gm_total, dgm_total, agm_total, agent_total,
+                agent_total # broker_commission usually tracks the total payout to broker
+            ))
+            
+            commission_id = c.lastrowid
+
+            # --- Insert Entries (Child Tables) ---
+            
+            # 1. Agent
+            c.execute("INSERT INTO commission_agent_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
+                      (commission_id, f"Broker {plot_no}", agent_total))
+            
+            # 2. AGM
+            c.execute("INSERT INTO commission_agm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
+                      (commission_id, f"AGM User {random.randint(1,5)}", agm_total))
+            
+            # 3. DGM
+            c.execute("INSERT INTO commission_dgm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
+                      (commission_id, f"DGM User {random.randint(1,3)}", dgm_total))
+            
+            # 4. GM
+            c.execute("INSERT INTO commission_gm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
+                      (commission_id, f"GM User {random.randint(1,2)}", gm_total))
+            
+            # 5. SRGM
+            c.execute("INSERT INTO commission_srgm_entries (commission_id, name, total_amount) VALUES (%s, %s, %s)", 
+                      (commission_id, f"SRGM User 1", srgm_total))
+
+        print(f"✅ Generated Commissions for {len(receipts_fetched)} plots")
         
         conn.commit()
         conn.close()
@@ -65,6 +183,8 @@ def seed_data():
         
     except Exception as e:
         print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     seed_data()
