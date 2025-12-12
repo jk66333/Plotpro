@@ -98,8 +98,8 @@ def seed_data():
             
             total_amount = sq_yards * negotiated_price
             advance_received = 200000
-            agreement_percentage = 25.0
-            amount_paid_at_agreement = total_amount * 0.25
+            agreement_percentage = 0.25
+            amount_paid_at_agreement = total_amount * agreement_percentage
             amc_charges = 0 # Requested by user
             
             balance_amount = total_amount - amount_paid_at_agreement # Simplified logic
