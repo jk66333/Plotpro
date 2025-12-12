@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 import datetime
+import random
 
 load_dotenv()
 
@@ -33,21 +34,26 @@ def seed_data():
         
         # 3. Create Receipts (Simulate Sold Plots)
         receipts = []
-        for i in range(1, 26):
+        for i in range(1, 46): # Increased to 45 receipts for better data density
+            basic_price = random.randint(15000, 25000)
+            sq_yards = random.randint(180, 250)
+            
             receipts.append((
                 f"REC-{i:03d}",
                 f"Customer {i}",
-                "Sunflower Gardens" if i <= 15 else "Green Valley",
+                "Sunflower Gardens" if i <= 25 else "Green Valley",
                 f"{i}", # Plot No
                 120000,
-                datetime.date.today() - datetime.timedelta(days=i)
+                datetime.date.today() - datetime.timedelta(days=i),
+                str(basic_price), # basic_price is varchar in schema
+                str(sq_yards)     # square_yards is varchar in schema
             ))
             
         c.executemany("""
-            INSERT INTO receipts (no, customer_name, project_name, plot_no, amount_numeric, date) 
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO receipts (no, customer_name, project_name, plot_no, amount_numeric, date, basic_price, square_yards) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, receipts)
-        print(f"✅ Added {len(receipts)} Receipts")
+        print(f"✅ Added {len(receipts)} Receipts with random Price/Area data")
         
         conn.commit()
         conn.close()
