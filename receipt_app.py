@@ -3296,11 +3296,26 @@ def raw_commission_pdf(commission_id, filename):
             
 
     
+    
+    # Calculate fallback values if missing (Logic matches frontend JS)
+    sq_yards = float(commission_data.get('sq_yards') or 0)
+    negotiated_price = float(commission_data.get('negotiated_price') or 0)
+    amc_charges = float(commission_data.get('amc_charges') or 0)
+    
+    # JS: const totalAmount = (inp.sqYards * inp.negotiatedPrice) + (inp.amcCharges * inp.sqYards);
+    calc_total_amount = (sq_yards * negotiated_price) + (amc_charges * sq_yards)
+    
+    # JS: const wValue = inp.sqYards * 5500;
+    calc_w_value = sq_yards * 5500
+    
+    # JS: const bValue = totalAmount - wValue;
+    calc_b_value = calc_total_amount - calc_w_value
+
     # Create calculations dict
     calculations = {
-        'total_amount': commission_data.get('total_amount') or 0,
-        'w_value': commission_data.get('w_value') or 0,
-        'b_value': commission_data.get('b_value') or 0,
+        'total_amount': commission_data.get('total_amount') or calc_total_amount,
+        'w_value': commission_data.get('w_value') or calc_w_value,
+        'b_value': commission_data.get('b_value') or calc_b_value,
         'balance_amount': commission_data.get('balance_amount') or 0,
         'actual_agreement_amount': commission_data.get('actual_agreement_amount') or 0,
         'agreement_balance': commission_data.get('agreement_balance') or 0,
