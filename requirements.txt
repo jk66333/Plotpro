@@ -9,3 +9,4 @@ gunicorn
 pytest
 pytest-playwright
 requests
+reportlab
