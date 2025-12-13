@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .page-header {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .btn-primary {
+        background-color: var(--brand-primary);
+        border-color: var(--brand-primary);
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--brand-secondary);
+        border-color: var(--brand-secondary);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title">Project Layout Manager</h1>
+                <p class="text-muted mb-0">Upload interactive layout maps (SVG) for projects</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <form method="post" enctype="multipart/form-data">
+
+                    <!-- Project Selection -->
+                    <div class="mb-4">
+                        <label class="form-label d-block">Select Project</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="create_new" id="useExisting"
+                                value="false" checked onchange="toggleProjectInput()">
+                            <label class="form-check-label" for="useExisting">
+                                Update Existing Project
+                            </label>
+                        </div>
+                        <select name="project_name" id="projectSelect" class="form-select mb-3">
+                            <option value="" disabled selected>Select a project...</option>
+                            {% for proj in projects %}
+                            <option value="{{ proj }}">{{ proj }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="create_new" id="createNew" value="true"
+                                onchange="toggleProjectInput()">
+                            <label class="form-check-label" for="createNew">
+                                Create New Project Layout
+                            </label>
+                        </div>
+                        <input type="text" name="new_project_name" id="newProjectInput" class="form-control"
+                            placeholder="Enter new project name" style="display: none;" disabled>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="mb-4">
+                        <label for="layoutSvg" class="form-label">Upload Layout Map (SVG)</label>
+                        <input type="file" class="form-control" name="layout_svg" id="layoutSvg" accept=".svg" required>
+                        <div class="form-text">please upload a valid .svg file representing the plot layout.</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cloud-upload me-2"></i>Save & Generate Tile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleProjectInput() {
+        const createNew = document.getElementById('createNew').checked;
+        const projectSelect = document.getElementById('projectSelect');
+        const newProjectInput = document.getElementById('newProjectInput');
+
+        if (createNew) {
+            projectSelect.disabled = true;
+            newProjectInput.style.display = 'block';
+            newProjectInput.disabled = false;
+            newProjectInput.required = true;
+            projectSelect.required = false;
+        } else {
+            projectSelect.disabled = false;
+            newProjectInput.style.display = 'none';
+            newProjectInput.disabled = true;
+            newProjectInput.required = false;
+            projectSelect.required = true;
+        }
+    }
+</script>
+
+{% endblock %}

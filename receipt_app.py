@@ -401,6 +401,40 @@ def get_projects():
         print(f"Error in get_projects(): {e}")
         return []
 
+def get_projects_full():
+    """
+    Return a list of dictionaries for all projects, including the layout_svg_path column.
+    """
+    try:
+        conn = database.get_db_connection()
+        c = conn.cursor(dictionary=True)
+        # We try to select all standard columns
+        # Note: 'layout_svg_path' might be NULL
+        # Using name as primary
+        try:
+            c.execute("SELECT id, name AS project_name, layout_svg_path FROM projects WHERE name IS NOT NULL ORDER BY name")
+            rows = c.fetchall()
+            if rows: 
+                conn.close()
+                return rows
+        except:
+            # Fallback for projects table variations
+            pass
+            
+        try:
+            c.execute("SELECT id, project_name, layout_svg_path FROM projects WHERE project_name IS NOT NULL ORDER BY project_name")
+            rows = c.fetchall()
+            conn.close()
+            return rows
+        except:
+             pass
+             
+        conn.close()
+        return []
+    except Exception as e:
+        print(f"Error in get_projects_full: {e}")
+        return []
+
 
 # -------------------------------
 # LOGIN SYSTEM
@@ -1442,9 +1476,13 @@ def dashboard():
     
     plots_remaining = max(0, total_plots - plots_to_landowners - num_plots)
     
+    # Get Layout Metadata for Dynamic Tile Rendering
+    project_metadata = get_projects_full()
+
     return render_template(
         "dashboard.html",
         projects=projects,
+        project_metadata=project_metadata, # Pass full metadata for layout tiles
         selected_project=selected_project,
         total_plots=total_plots,
         num_plots=num_plots,
@@ -1452,6 +1490,97 @@ def dashboard():
         plots_to_landowners=plots_to_landowners,
         pending_count=pending_count
     )
+
+@app.route("/project_layout_manager", methods=["GET", "POST"])
+def project_layout_manager():
+    if session.get("role") != "admin":
+        abort(403)
+        
+    projects = get_projects()
+    
+    if request.method == "POST":
+        project_name = request.form.get("project_name")
+        create_new = request.form.get("create_new") == "true"
+        new_project_name = request.form.get("new_project_name")
+        
+        target_project = new_project_name if create_new else project_name
+        
+        if not target_project:
+            flash("Please specify a project name.", "danger")
+            return redirect(url_for("project_layout_manager"))
+            
+        # Handle File Upload
+        if 'layout_svg' not in request.files:
+            flash("No file part", "danger")
+            return redirect(url_for("project_layout_manager"))
+            
+        file = request.files['layout_svg']
+        
+        if file.filename == '':
+            flash("No selected file", "danger")
+            return redirect(url_for("project_layout_manager"))
+            
+        if file and file.filename.endswith('.svg'):
+            # Save file
+            import os
+            from werkzeug.utils import secure_filename
+            
+            # Ensure directory exists
+            layout_dir = os.path.join(app.root_path, 'static', 'layouts')
+            os.makedirs(layout_dir, exist_ok=True)
+            
+            # Secure filename - use project name to keep it organized? 
+            # Or keep original filename? Let's use clean project name + timestamp or just project name
+            safe_proj = secure_filename(target_project)
+            filename = f"{safe_proj}_layout.svg"
+            filepath = os.path.join(layout_dir, filename)
+            file.save(filepath)
+            
+            relative_path = f"layouts/{filename}"
+            
+            conn = database.get_db_connection()
+            c = conn.cursor()
+            
+            try:
+                # Upsert project
+                # First check if project exists
+                exists = False
+                try:
+                    c.execute("SELECT id FROM projects WHERE name = %s", (target_project,))
+                    if c.fetchone(): exists = True
+                except:
+                     c.execute("SELECT id FROM projects WHERE project_name = %s", (target_project,))
+                     if c.fetchone(): exists = True
+                     
+                if exists:
+                    # Update svg path
+                    try:
+                        c.execute("UPDATE projects SET layout_svg_path = %s WHERE name = %s", (relative_path, target_project))
+                    except:
+                        c.execute("UPDATE projects SET layout_svg_path = %s WHERE project_name = %s", (relative_path, target_project))
+                    flash(f"Updated layout for project '{target_project}'", "success")
+                else:
+                    # Create new project
+                    # Default values for others
+                    try:
+                        c.execute("INSERT INTO projects (name, layout_svg_path) VALUES (%s, %s)", (target_project, relative_path))
+                    except:
+                        c.execute("INSERT INTO projects (project_name, layout_svg_path) VALUES (%s, %s)", (target_project, relative_path))
+                    flash(f"Created new project '{target_project}' with layout", "success")
+                    
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                flash(f"Database error: {e}", "danger")
+            finally:
+                conn.close()
+                
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid file type. Please upload a .svg file.", "danger")
+            return redirect(url_for("project_layout_manager"))
+
+    return render_template("project_layout_manager.html", projects=projects)
 
 
 @app.route("/api/stats/amount_by_month")

@@ -3,7 +3,13 @@
 
 <style>
   :root {
-    --brand-primary: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }};
+    --brand-primary: {
+        {
+        g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+      }
+    }
+
+    ;
     --brand-secondary: #d85e1f;
     --brand-light: #fff5f0;
   }
@@ -286,7 +292,7 @@
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("account_summary", project=selected_project) if selected_project else
+            <a href="{{ url_for(" account_summary", project=selected_project) if selected_project else
               url_for("account_summary") }}" class="stat-card action-card card-green">
               <div class="card-header-section">
                 <div class="card-icon">
@@ -301,7 +307,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("plot_management") }}" class="stat-card action-card card-blue">
+            <a href="{{ url_for(" plot_management") }}" class="stat-card action-card card-blue">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-grid-3x3-gap"></i>
@@ -314,7 +320,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("layout_management") }}" class="stat-card action-card card-teal">
+            <a href="{{ url_for(" layout_management") }}" class="stat-card action-card card-teal">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-gear-wide-connected"></i>
@@ -329,7 +335,7 @@
 
           {% if session.get("role") == "admin" %}
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("user_management") }}" class="stat-card action-card card-orange">
+            <a href="{{ url_for(" user_management") }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-people"></i>
@@ -342,7 +348,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("pending_receipts") }}" class="stat-card action-card card-orange">
+            <a href="{{ url_for(" pending_receipts") }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-hourglass-split"></i>
@@ -362,7 +368,7 @@
           {% endif %}
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for("create_receipts_options") }}" class="stat-card action-card card-pink">
+            <a href="{{ url_for(" create_receipts_options") }}" class="stat-card action-card card-pink">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-receipt"></i>
@@ -398,7 +404,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <a href="{{ url_for("plots_list", project=selected_project) if selected_project else url_for("plots_list")
+            <a href="{{ url_for(" plots_list", project=selected_project) if selected_project else url_for("plots_list")
               }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
@@ -449,7 +455,7 @@
         </div>
         <div class="row g-4">
           <div class="col-lg-6 col-md-6">
-            <a href="{{ url_for("commission_calculator") }}" class="stat-card action-card card-purple">
+            <a href="{{ url_for(" commission_calculator") }}" class="stat-card action-card card-purple">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-calculator"></i>
@@ -463,7 +469,7 @@
           </div>
 
           <div class="col-lg-6 col-md-6">
-            <a href="{{ url_for("view_commissions") }}" class="stat-card action-card card-teal">
+            <a href="{{ url_for(" view_commissions") }}" class="stat-card action-card card-teal">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-grid"></i>
@@ -481,17 +487,37 @@
       <div class="row g-4 mb-5">
 
         {% if session.get("role") == "admin" or session.get("can_view_vishvam_layout") %}
-        <div class="col-lg-6">
+        <div class="col-lg-12">
           <div class="section-header">
             <h2 class="section-title">
               Project Layouts</h2>
           </div>
           <div class="row g-4">
-            {% if selected_project %}
-            {% if selected_project == "Vishvam" and (session.get("role") == "admin" or
-            session.get("can_view_vishvam_layout")) %}
-            <div class="col-12">
-              <a href="{{ url_for("plot_layout_viewer", project_name="Vishvam" ) }}"
+
+            <!-- 1. Manager Link (Admin Only) -->
+            {% if session.get("role") == "admin" %}
+            <div class="col-lg-4 col-md-6">
+              <a href="{{ url_for('project_layout_manager') }}" class="stat-card action-card card-purple">
+                <div class="card-header-section">
+                  <div class="card-icon">
+                    <i class="bi bi-layers-half"></i>
+                  </div>
+                  <span class="card-badge">Manage</span>
+                </div>
+                <h3 class="card-title">Project Layouts</h3>
+                <p class="card-description">Upload SVGs and manage interactive layouts for all projects</p>
+              </a>
+            </div>
+            {% endif %}
+
+            <!-- 2. Dynamic Tiles for Projects with Layouts -->
+            {% for meta in project_metadata %}
+            {% if meta.layout_svg_path %}
+            <!-- For now, we allow admins and those with dashboard access. 
+                         For specific 'Vishvam' permission, we keep the legacy check just in case, 
+                         or implied by being here. -->
+            <div class="col-lg-4 col-md-6">
+              <a href="{{ url_for('plot_layout_viewer', project_name=meta.project_name) }}"
                 class="stat-card action-card card-blue">
                 <div class="card-header-section">
                   <div class="card-icon">
@@ -499,30 +525,13 @@
                   </div>
                   <span class="card-badge">Interactive</span>
                 </div>
-                <h3 class="card-title">Vishvam Layout</h3>
-                <p class="card-description">View interactive plot layout with real-time availability status</p>
+                <h3 class="card-title">{{ meta.project_name }}</h3>
+                <p class="card-description">View interactive plot layout map</p>
               </a>
             </div>
             {% endif %}
-            {# Add more project layouts here as they become available #}
-            {% else %}
-            {% if session.get("role") == "admin" or session.get("can_view_vishvam_layout") %}
-            <div class="col-12">
-              <a href="{{ url_for("plot_layout_viewer", project_name="Vishvam" ) }}"
-                class="stat-card action-card card-blue">
-                <div class="card-header-section">
-                  <div class="card-icon">
-                    <i class="bi bi-map"></i>
-                  </div>
-                  <span class="card-badge">Interactive</span>
-                </div>
-                <h3 class="card-title">Vishvam Layout</h3>
-                <p class="card-description">View interactive plot layout with real-time availability status</p>
-              </a>
-            </div>
-            {% endif %}
-            {# Add more project layouts here as they become available #}
-            {% endif %}
+            {% endfor %}
+
           </div>
         </div>
         {% endif %}
@@ -535,7 +544,7 @@
           </div>
           <div class="row g-4">
             <div class="col-12">
-              <a href="{{ url_for("mediator_performance", project=selected_project) if selected_project else
+              <a href="{{ url_for(" mediator_performance", project=selected_project) if selected_project else
                 url_for("mediator_performance") }}" class="stat-card card-teal action-card">
                 <div class="card-header-section">
                   <div class="card-icon">
