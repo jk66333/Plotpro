@@ -141,7 +141,9 @@
                         </div>
 
                         <div class="d-grid mt-5">
-                            <button type="submit" class="btn btn-brand-custom btn-lg">
+                            <button type="submit" class="btn btn-lg" style="background-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                                       border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                                       color: white !important; opacity: 1 !important;">
                                 <i class="bi bi-cloud-upload me-2"></i>Create Layout
                             </button>
                         </div>
