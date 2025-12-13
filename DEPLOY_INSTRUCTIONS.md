@@ -32,9 +32,9 @@ pip install -r requirements.txt
 ```
 
 ## 5. Database Migration (Critical)
-Run this one-liner to add the `layout_svg_path` column to the `projects` table:
+Run the migration script to add the missing column:
 ```bash
-python3 -c "import database; conn=database.get_db_connection(); c=conn.cursor(); c.execute('ALTER TABLE projects ADD COLUMN IF NOT EXISTS layout_svg_path VARCHAR(255) DEFAULT NULL'); conn.commit(); print('Migration Successful');"
+python3 migrate_layout_column.py
 ```
 
 ## 6. Create Service (If "Unit receipt_app.service not found")
