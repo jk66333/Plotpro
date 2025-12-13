@@ -172,6 +172,13 @@ def migrate_users_table():
             print("Added column can_search_receipts to users table")
         except database.OperationalError as e:
             print(f"Column can_search_receipts might already exist: {e}")
+
+    if 'can_view_vishvam_layout' not in existing_columns:
+        try:
+            c.execute("ALTER TABLE users ADD COLUMN can_view_vishvam_layout INTEGER NOT NULL DEFAULT 0")
+            print("Added column can_view_vishvam_layout to users table")
+        except database.OperationalError as e:
+            print(f"Column can_view_vishvam_layout might already exist: {e}")
     
     conn.commit()
     conn.close()
