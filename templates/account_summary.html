@@ -170,7 +170,7 @@
                     </p>
                 </div>
                 <div class="col-lg-6">
-                    <form method="get" action="{{ url_for(" account_summary") }}"
+                    <form method="get" action="{{ url_for('account_summary') }}"
                         class="d-flex align-items-center gap-3 justify-content-lg-end">
                         <label for="projectFilter" class="fw-semibold text-secondary mb-0 text-nowrap">Filter by
                             Project:</label>
@@ -230,8 +230,8 @@
         </div>
 
         <div class="text-center mt-5">
-            <a href="{{ url_for(" dashboard", project=selected_project) if selected_project else url_for("dashboard")
-                }}" class="btn-back">
+            <a href="{{ url_for('dashboard', project=selected_project) if selected_project else url_for('dashboard') }}"
+                class="btn-back">
                 <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
             </a>
         </div>
