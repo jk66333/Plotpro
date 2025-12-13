@@ -1561,6 +1561,16 @@ def project_layout_manager():
                 query = f"SELECT id FROM projects WHERE {col_name} = %s"
                 c.execute(query, (target_project,))
                 if c.fetchone(): exists = True
+                
+                # SELF-HEALING: Check if 'layout_svg_path' column exists, if not ADD IT
+                try:
+                    c.execute("SHOW COLUMNS FROM projects LIKE 'layout_svg_path'")
+                    if not c.fetchone():
+                        print("Auto-migrating: Adding layout_svg_path column...")
+                        c.execute("ALTER TABLE projects ADD COLUMN layout_svg_path VARCHAR(255) DEFAULT NULL")
+                        conn.commit() # Commit schema change immediately
+                except Exception as e:
+                    print(f"Auto-migration warning: {e}")
                      
                 if exists:
                     # Update svg path
