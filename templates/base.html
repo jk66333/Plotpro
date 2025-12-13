@@ -202,11 +202,15 @@
             <div class="user-info-name">{{ session.get('user') }}</div>
           </li>
           <li class="nav-item">
-            <a class="btn btn-sm btn-brand" href="{{ url_for('logout') }}">Logout</a>
+            <a class="btn btn-sm" href="{{ url_for('logout') }}" style="background-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                      color: white !important;">Logout</a>
           </li>
           {% else %}
           <li class="nav-item">
-            <a class="btn btn-sm btn-brand" href="{{ url_for('login') }}">Login</a>
+            <a class="btn btn-sm" href="{{ url_for('login') }}" style="background-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                      border-color: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }} !important; 
+                      color: white !important;">Login</a>
           </li>
           {% endif %}
         </ul>
