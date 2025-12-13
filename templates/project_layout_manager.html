@@ -91,7 +91,10 @@
         </div>
 
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+
+            <!-- Upload Form (Admin Only) -->
+            {% if session.get("role") == "admin" %}
+            <div class="col-lg-8 mb-5">
                 <div class="form-card">
                     <form method="post" enctype="multipart/form-data">
 
@@ -150,6 +153,48 @@
                     </form>
                 </div>
             </div>
+            {% endif %}
+
+            <!-- Existing Layouts Grid (Visible to All with Access) -->
+            <div class="col-12">
+                <div class="section-header mb-4">
+                    <h2 class="section-title border-bottom pb-2">Available Project Layouts</h2>
+                </div>
+
+                <div class="row g-4">
+                    {% set has_layouts = false %}
+                    {% for meta in project_metadata %}
+                    {% if meta.layout_svg_path %}
+                    {% set has_layouts = true %}
+                    <div class="col-lg-4 col-md-6">
+                        <a href="{{ url_for('plot_layout_viewer', project_name=meta.project_name) }}"
+                            class="stat-card action-card card-blue h-100 text-decoration-none d-block p-4 border rounded shadow-sm">
+                            <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                                <div class="card-icon d-flex align-items-center justify-content-center rounded text-white"
+                                    style="width:48px; height:48px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); font-size: 1.5rem;">
+                                    <i class="bi bi-map"></i>
+                                </div>
+                                <span class="badge bg-light text-primary text-uppercase px-2 py-1">Interactive</span>
+                            </div>
+                            <h3 class="h5 fw-bold text-dark mb-2">{{ meta.project_name }}</h3>
+                            <p class="text-muted small mb-0">Click to view interactive plot layout map</p>
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if not has_layouts %}
+                    <div class="col-12 text-center py-5">
+                        <div class="text-muted">
+                            <i class="bi bi-layers display-4 mb-3 d-block"></i>
+                            <h5>No Layouts Found</h5>
+                            <p>No interactive layouts have been created yet.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -494,8 +494,7 @@
           </div>
           <div class="row g-4">
 
-            <!-- 1. Manager Link (Admin Only) -->
-            {% if session.get("role") == "admin" %}
+            <!-- 1. Manager Link (Visible to Admin and Authorized Users) -->
             <div class="col-lg-4 col-md-6">
               <a href="{{ url_for('project_layout_manager') }}" class="stat-card action-card card-purple">
                 <div class="card-header-section">
@@ -505,32 +504,9 @@
                   <span class="card-badge">Manage</span>
                 </div>
                 <h3 class="card-title">Project Layouts</h3>
-                <p class="card-description">Upload SVGs and manage interactive layouts for all projects</p>
+                <p class="card-description">View and manage interactive layouts for all projects</p>
               </a>
             </div>
-            {% endif %}
-
-            <!-- 2. Dynamic Tiles for Projects with Layouts -->
-            {% for meta in project_metadata %}
-            {% if meta.layout_svg_path %}
-            <!-- For now, we allow admins and those with dashboard access. 
-                         For specific 'Vishvam' permission, we keep the legacy check just in case, 
-                         or implied by being here. -->
-            <div class="col-lg-4 col-md-6">
-              <a href="{{ url_for('plot_layout_viewer', project_name=meta.project_name) }}"
-                class="stat-card action-card card-blue">
-                <div class="card-header-section">
-                  <div class="card-icon">
-                    <i class="bi bi-map"></i>
-                  </div>
-                  <span class="card-badge">Interactive</span>
-                </div>
-                <h3 class="card-title">{{ meta.project_name }}</h3>
-                <p class="card-description">View interactive plot layout map</p>
-              </a>
-            </div>
-            {% endif %}
-            {% endfor %}
 
           </div>
         </div>

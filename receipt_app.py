@@ -1493,12 +1493,18 @@ def dashboard():
 
 @app.route("/project_layout_manager", methods=["GET", "POST"])
 def project_layout_manager():
-    if session.get("role") != "admin":
+    # Allow access if admin OR has specific permission
+    if session.get("role") != "admin" and not session.get("can_view_vishvam_layout"):
         abort(403)
         
     projects = get_projects()
+    project_metadata = get_projects_full() # Fetch metadata to list existing layouts
     
     if request.method == "POST":
+        # Enforce Admin-only for writes
+        if session.get("role") != "admin":
+             abort(403)
+
         project_name = request.form.get("project_name")
         create_new = request.form.get("create_new") == "true"
         new_project_name = request.form.get("new_project_name")
@@ -1590,12 +1596,12 @@ def project_layout_manager():
             finally:
                 conn.close()
                 
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("project_layout_manager")) # Redirect back to manager to see list
         else:
             flash("Invalid file type. Please upload a .svg file.", "danger")
             return redirect(url_for("project_layout_manager"))
 
-    return render_template("project_layout_manager.html", projects=projects)
+    return render_template("project_layout_manager.html", projects=projects, project_metadata=project_metadata)
 
 
 @app.route("/api/stats/amount_by_month")
