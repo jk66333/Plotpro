@@ -1542,30 +1542,35 @@ def project_layout_manager():
             c = conn.cursor()
             
             try:
-                # Upsert project
-                # First check if project exists
-                exists = False
+                # Dynamic Column Detection to handle schema variations
+                # Check which column exists: 'name' or 'project_name'
+                col_name = 'name'
                 try:
-                    c.execute("SELECT id FROM projects WHERE name = %s", (target_project,))
-                    if c.fetchone(): exists = True
+                    c.execute("SHOW COLUMNS FROM projects LIKE 'name'")
+                    if not c.fetchone():
+                        c.execute("SHOW COLUMNS FROM projects LIKE 'project_name'")
+                        if c.fetchone():
+                            col_name = 'project_name'
                 except:
-                     c.execute("SELECT id FROM projects WHERE project_name = %s", (target_project,))
-                     if c.fetchone(): exists = True
+                    # Fallback to 'name' if SHOW COLUMNS fails (unlikely)
+                    pass
+                
+                # Check if project exists
+                exists = False
+                # Use the detected column name safely
+                query = f"SELECT id FROM projects WHERE {col_name} = %s"
+                c.execute(query, (target_project,))
+                if c.fetchone(): exists = True
                      
                 if exists:
                     # Update svg path
-                    try:
-                        c.execute("UPDATE projects SET layout_svg_path = %s WHERE name = %s", (relative_path, target_project))
-                    except:
-                        c.execute("UPDATE projects SET layout_svg_path = %s WHERE project_name = %s", (relative_path, target_project))
+                    update_query = f"UPDATE projects SET layout_svg_path = %s WHERE {col_name} = %s"
+                    c.execute(update_query, (relative_path, target_project))
                     flash(f"Updated layout for project '{target_project}'", "success")
                 else:
                     # Create new project
-                    # Default values for others
-                    try:
-                        c.execute("INSERT INTO projects (name, layout_svg_path) VALUES (%s, %s)", (target_project, relative_path))
-                    except:
-                        c.execute("INSERT INTO projects (project_name, layout_svg_path) VALUES (%s, %s)", (target_project, relative_path))
+                    insert_query = f"INSERT INTO projects ({col_name}, layout_svg_path) VALUES (%s, %s)"
+                    c.execute(insert_query, (target_project, relative_path))
                     flash(f"Created new project '{target_project}' with layout", "success")
                     
                 conn.commit()
