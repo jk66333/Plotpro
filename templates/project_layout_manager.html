@@ -2,23 +2,13 @@
 {% block content %}
 
 <style>
-    :root {
-        --brand-primary: {
-                {
-                g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
-            }
-        }
-
-        ;
-        --brand-secondary: #d85e1f;
-    }
+    /* Use global --brand variable from base.html */
 
     .page-wrapper {
         background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
         min-height: 100vh;
         padding: 2rem 0;
         margin-top: -22px;
-        /* Counteract main-container padding in base.html if needed, or just standard padding */
     }
 
     .page-header {
@@ -48,18 +38,20 @@
         color: #495057;
     }
 
+    /* Robust Button Styling */
     .btn-brand-custom {
-        background-color: var(--brand-primary);
-        border-color: var(--brand-primary);
-        color: white;
+        background-color: var(--brand, #f16924) !important;
+        border-color: var(--brand, #f16924) !important;
+        color: #ffffff !important;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
+        opacity: 1 !important;
+        /* Ensure visibility */
     }
 
     .btn-brand-custom:hover {
-        background-color: var(--brand-secondary);
-        border-color: var(--brand-secondary);
-        color: white;
+        filter: brightness(0.9);
+        color: #ffffff !important;
     }
 
     .btn-back-custom {
@@ -73,6 +65,12 @@
         background: #e9ecef;
         color: #212529;
         border-color: #adb5bd;
+    }
+
+    /* Form Check Branding */
+    .form-check-input:checked {
+        background-color: var(--brand, #f16924);
+        border-color: var(--brand, #f16924);
     }
 </style>
 
@@ -144,7 +142,7 @@
 
                         <div class="d-grid mt-5">
                             <button type="submit" class="btn btn-brand-custom btn-lg">
-                                <i class="bi bi-cloud-upload me-2"></i>Create Layout & Generate Tile
+                                <i class="bi bi-cloud-upload me-2"></i>Create Layout
                             </button>
                         </div>
                     </form>
