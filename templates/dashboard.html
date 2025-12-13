@@ -292,8 +292,8 @@
         </div>
         <div class="row g-4">
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" account_summary", project=selected_project) if selected_project else
-              url_for("account_summary") }}" class="stat-card action-card card-green">
+            <a href="{{ url_for('account_summary', project=selected_project) if selected_project else
+              url_for('account_summary') }}" class="stat-card action-card card-green">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-currency-dollar"></i>
@@ -307,7 +307,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" plot_management") }}" class="stat-card action-card card-blue">
+            <a href="{{ url_for('plot_management') }}" class="stat-card action-card card-blue">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-grid-3x3-gap"></i>
@@ -320,7 +320,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" layout_management") }}" class="stat-card action-card card-teal">
+            <a href="{{ url_for('layout_management') }}" class="stat-card action-card card-teal">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-gear-wide-connected"></i>
@@ -335,7 +335,7 @@
 
           {% if session.get("role") == "admin" %}
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" user_management") }}" class="stat-card action-card card-orange">
+            <a href="{{ url_for('user_management') }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-people"></i>
@@ -348,7 +348,7 @@
           </div>
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" pending_receipts") }}" class="stat-card action-card card-orange">
+            <a href="{{ url_for('pending_receipts') }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-hourglass-split"></i>
@@ -368,7 +368,7 @@
           {% endif %}
 
           <div class="col-lg-4 col-md-6">
-            <a href="{{ url_for(" create_receipts_options") }}" class="stat-card action-card card-pink">
+            <a href="{{ url_for('create_receipts_options') }}" class="stat-card action-card card-pink">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-receipt"></i>
@@ -404,7 +404,7 @@
           </div>
 
           <div class="col-lg-3 col-md-6">
-            <a href="{{ url_for(" plots_list", project=selected_project) if selected_project else url_for("plots_list")
+            <a href="{{ url_for('plots_list', project=selected_project) if selected_project else url_for('plots_list')
               }}" class="stat-card action-card card-orange">
               <div class="card-header-section">
                 <div class="card-icon">
@@ -455,7 +455,7 @@
         </div>
         <div class="row g-4">
           <div class="col-lg-6 col-md-6">
-            <a href="{{ url_for(" commission_calculator") }}" class="stat-card action-card card-purple">
+            <a href="{{ url_for('commission_calculator') }}" class="stat-card action-card card-purple">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-calculator"></i>
@@ -469,7 +469,7 @@
           </div>
 
           <div class="col-lg-6 col-md-6">
-            <a href="{{ url_for(" view_commissions") }}" class="stat-card action-card card-teal">
+            <a href="{{ url_for('view_commissions') }}" class="stat-card action-card card-teal">
               <div class="card-header-section">
                 <div class="card-icon">
                   <i class="bi bi-grid"></i>
@@ -544,8 +544,8 @@
           </div>
           <div class="row g-4">
             <div class="col-12">
-              <a href="{{ url_for(" mediator_performance", project=selected_project) if selected_project else
-                url_for("mediator_performance") }}" class="stat-card card-teal action-card">
+              <a href="{{ url_for('mediator_performance', project=selected_project) if selected_project else
+                url_for('mediator_performance') }}" class="stat-card card-teal action-card">
                 <div class="card-header-section">
                   <div class="card-icon">
                     <i class="bi bi-trophy"></i>
