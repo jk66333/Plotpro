@@ -18,7 +18,13 @@
 
   <style>
     :root {
-      --brand: {{ g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924' }};
+      --brand: {
+          {
+          g.tenant.brand_color if g.tenant and g.tenant.brand_color else '#f16924'
+        }
+      }
+
+      ;
     }
 
     /* Professional Navigation Bar */
@@ -148,7 +154,8 @@
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-light">
     <div class="container-fluid" style="max-width:1200px; margin:0 auto;">
-      <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+      <a class="navbar-brand d-flex align-items-center"
+        href="{{ url_for('dashboard') if session.get('role') == 'admin' else url_for('index') }}">
         <!-- Dynamic Logo for SaaS: Show Logo if exists, else Show Name in plain text -->
         {% if g.tenant and g.tenant.logo_url %}
         <img src="{{ url_for('static', filename=g.tenant.logo_url) }}" alt="{{ g.tenant.name }}" class="logo-img">
